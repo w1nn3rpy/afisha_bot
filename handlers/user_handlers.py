@@ -74,7 +74,7 @@ async def menu_handler(call: CallbackQuery, state: FSMContext):
         user_data = await get_user(call.from_user.id)
         frequency = user_data['notification_frequency']
 
-        await call.message.edit_text(f'Сейчас вы подписаны на уведомления раз в {frequency} {'дней' if frequency == 7 else 'день'}',
+        await call.message.edit_text(f'Сейчас вы подписаны на уведомления раз в {frequency} {"дней" if frequency == 7 else "день"}',
                                      reply_markup=control_subscribe_kb(frequency))
 
 
@@ -100,7 +100,7 @@ async def subscribe_on_notifications(call: CallbackQuery, state: FSMContext):
     await enable_notifications(call.from_user.id, period)
 
     await call.message.edit_text('Вы подписались на уведомления о новых событиях.\n'
-                                 f'Уведомления будут приходить раз в {period} {'дней' if period == 7 else 'день'}\n'
+                                 f'Уведомления будут приходить раз в {period} {"дней" if period == 7 else "день"}\n'
                                  f'Управлять подпиской можно перейдя в "Управление подпиской"',
                                  reply_markup=await main_menu_kb(call.from_user.id))
     await state.set_state(UserStates.menu)
@@ -110,7 +110,7 @@ async def control_subscribe(call: CallbackQuery, state: FSMContext):
     if call.data.startswith('change_frequency'):
         new_frequency = int(call.data.split(':')[1])
         await enable_notifications(call.from_user.id, new_frequency)
-        await call.message.edit_text(f'Теперь вы будете получать уведомления раз в {new_frequency} {'дней' if new_frequency == 7 else 'день'}',
+        await call.message.edit_text(f'Теперь вы будете получать уведомления раз в {new_frequency} {"дней" if new_frequency == 7 else "день"}',
                                      reply_markup=await main_menu_kb(call.from_user.id))
         await state.set_state(UserStates.menu)
 
@@ -139,5 +139,5 @@ async def confirm_unsubscribe(call: CallbackQuery, state: FSMContext):
         frequency = user_data['notification_frequency']
 
         await call.message.edit_text(
-            f'Сейчас вы подписаны на уведомления раз в {frequency} {'дней' if frequency == 7 else 'день'}',
+            f'Сейчас вы подписаны на уведомления раз в {frequency} {"дней" if frequency == 7 else "день"}',
             reply_markup=control_subscribe_kb(frequency))
