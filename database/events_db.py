@@ -22,8 +22,8 @@ async def add_events(events:List[dict]):
                 category = event.get('category')
                 date = event.get('date')
                 time = event.get('time')
-                location = event.get('location')
-                link = event.get('event_link')
+                location = event.get('venue')
+                link = event.get('link')
 
                 await conn.execute(query, title, category, date, time, location, link)
 
