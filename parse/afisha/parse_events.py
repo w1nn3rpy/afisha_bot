@@ -67,7 +67,7 @@ def get_all_events() -> List[dict] | None:
         page = 1
         while True:
             url = f"{BASE_URL}?sort=date&so=desc&page={page}"
-            logger.info(f"🔍 Парсим страницу {page}...")
+            logger.info(f"Найдено мероприятий: {len(events)}\n🔍 Парсим страницу {page}...")
 
             driver.get(url)
             soup = BeautifulSoup(driver.page_source, "html.parser")
