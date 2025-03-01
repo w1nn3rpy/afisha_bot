@@ -14,6 +14,8 @@ from config import logger
 def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
 
     descriptions = {link: 'None' for link in list_of_links}
+    all_count = len(list_of_links)
+    current_count = 0
 
     # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
     os.system("Xvfb :99 -screen 0 1920x1080x24 &")
@@ -31,7 +33,7 @@ def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
         driver = uc.Chrome(options=options)
         for url in list_of_links:
             try:
-                logger.info(f"[INFO] Открываем страницу: {url}")
+                logger.info(f"{current_count}/{all_count} [INFO] Открываем страницу: {url}")
                 driver.get(url)
 
                 # Ожидание полной загрузки страницы
@@ -47,7 +49,8 @@ def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
                     )
                     description = description_block.text.strip()
                 except:
-                    description = "--[Описание не найдено]--"
+                    logger.error(f"[ERROR] Ошибка при обработке {url}: {e}")
+                    description = "Нет описания"
 
                 logger.info(f"[INFO] Описание: {description}")
                 descriptions[url] = description
@@ -56,7 +59,9 @@ def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
 
                 logger.error(f"[ERROR] Ошибка при обработке {url}: {e}")
 
-                descriptions[url] = "--[Описание не найдено]--"
+                descriptions[url] = "Нет описания"
+
+            current_count += 1
 
         return descriptions
 
