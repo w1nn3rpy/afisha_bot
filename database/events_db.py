@@ -11,8 +11,8 @@ async def add_events(events:List[dict]):
         conn = await asyncpg.connect(DB_URL)
 
         query = '''
-        INSERT INTO events
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO events (title, category, date, time, location, source)
+        VALUES ($1, $2, $3, $4, $5, $6)
         '''
 
         for event in events:
