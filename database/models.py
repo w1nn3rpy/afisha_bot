@@ -27,7 +27,7 @@ async def create_table_if_not_exist():
             CREATE TABLE events (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
-            category VARCHAR(255),
+            category VARCHAR(255) DEFAULT 'Категория не указана',
             date VARCHAR(255) NOT NULL,
             time VARCHAR(255) NOT NULL,
             location TEXT,

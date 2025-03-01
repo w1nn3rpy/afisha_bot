@@ -15,7 +15,7 @@ from config import logger
 
 def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
 
-    descriptions = {link: 'None' for link in list_of_links}
+    descriptions = {link: 'None' for link in list_of_links.pop()}
     all_count = len(list_of_links)
     current_count = 0
 
@@ -60,8 +60,11 @@ def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
             except Exception as e:
 
                 logger.error(f"[ERROR] Ошибка при обработке {url}: {e}")
-
                 descriptions[url] = "Нет описания"
+                driver.quit()
+                asyncio.sleep(5)
+                driver = uc.Chrome(options=options)
+                asyncio.sleep(5)
 
             current_count += 1
             asyncio.sleep(3)
