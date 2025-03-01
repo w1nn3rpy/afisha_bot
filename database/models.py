@@ -4,6 +4,9 @@ from config import logger
 
 DB_URL=config('DATABASE_URL')
 
+#category TEXT CHECK(category IN('Концерт', 'Театр', 'Выставка', 'Экскурсия', 'Для детей', 'Мастер класс', 'Наука', 'Другое')),
+
+
 async def create_table_if_not_exist():
 
     conn = None
@@ -24,7 +27,7 @@ async def create_table_if_not_exist():
             CREATE TABLE events (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
-            category TEXT CHECK (category IN ('Концерт', 'Театр', 'Выставка', 'Экскурсия', 'Для детей', 'Мастер класс', 'Наука', 'Другое')),
+            category VARCHAR(255)
             date VARCHAR(255) NOT NULL,
             time VARCHAR(255) NOT NULL,
             location TEXT,
