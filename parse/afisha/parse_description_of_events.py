@@ -11,9 +11,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from config import logger
+from database.events_db import get_events_without_description
 
 
-def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
+async def get_descriptions() -> Dict[str, str] | None:
+
+    list_of_links = await get_events_without_description()
+    if list_of_links is None:
+        return None
 
     descriptions = {link: 'None' for link in list_of_links.pop()}
     all_count = len(list_of_links)
@@ -62,12 +67,13 @@ def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
                 logger.error(f"[ERROR] Ошибка при обработке {url}: {e}")
                 descriptions[url] = "Нет описания"
                 driver.quit()
-                asyncio.sleep(5)
+                await asyncio.sleep(5)
                 driver = uc.Chrome(options=options)
-                asyncio.sleep(5)
+                logger.info('[INFO] Браузер перезапущен')
+                await asyncio.sleep(5)
 
             current_count += 1
-            asyncio.sleep(3)
+            await asyncio.sleep(3)
 
         return descriptions
 

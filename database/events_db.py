@@ -63,4 +63,21 @@ async def add_descriptions(descriptions:dict):
             await conn.close()
 
 
+async def get_events_without_description():
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = """
+        SELECT source FROM events
+        WHERE description = 'Нет описания'
+        """
+        rows = await conn.fetchrows(query)
 
+        return rows if rows is not None else None
+
+    except Exception as e:
+        logger.error(f'Произошла ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
