@@ -1,4 +1,6 @@
+import asyncio
 import os
+import random
 import time
 import traceback
 from typing import Dict
@@ -62,6 +64,7 @@ def get_descriptions(list_of_links: list) -> Dict[str, str] | None:
                 descriptions[url] = "Нет описания"
 
             current_count += 1
+            asyncio.sleep(3)
 
         return descriptions
 
