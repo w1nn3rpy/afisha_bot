@@ -71,7 +71,7 @@ async def get_events_without_description():
         SELECT source FROM events
         WHERE description = 'Нет описания'
         """
-        rows = await conn.fetchrows(query)
+        rows = await conn.fetch(query)
 
         return rows if rows is not None else None
 
