@@ -38,7 +38,7 @@ async def get_descriptions() -> Dict[str, str] | None:
     try:
         logger.info("[INFO] Запускаем браузер...")
         driver = uc.Chrome(options=options)
-        for url in list_of_links:
+        for url, description in descriptions.items():
             try:
                 logger.info(f"{current_count}/{all_count} [INFO] Открываем страницу: {url}")
                 driver.get(url)
