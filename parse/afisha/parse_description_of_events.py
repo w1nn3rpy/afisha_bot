@@ -18,7 +18,7 @@ from database.events_db import delete_event_by_url
 
 async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None:
 
-    descriptions = {record['source']: 'None' for record in list_of_links}
+    descriptions = {record['source']: 'Нет описания' for record in list_of_links}
     all_count = len(list_of_links)
     current_count = 0
 
@@ -58,7 +58,9 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                     description = description_block.text.strip()
 
                     logger.info(f"[INFO] Описание: {description}")
-                    descriptions[url] = description
+                    if len(description) > 5:
+                        descriptions[url] = description
+                        logger.info(f"[INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
                     break
 
                 except Exception as e:
@@ -87,9 +89,6 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                     logger.info('[INFO] Браузер перезапущен')
                     await asyncio.sleep(5)
 
-            if current_count == 15:
-                print('остановочка')
-                break
             current_count += 1
             await asyncio.sleep(1)
 
