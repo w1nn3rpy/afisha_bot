@@ -66,11 +66,12 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
     current_count = 0
 
     # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
-    os.system("Xvfb :99 -screen 0 1920x1080x24 &")
-    os.environ["DISPLAY"] = ":99"
+    display_num = 99 + process_id  # Разные Xvfb для каждого процесса
+    os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
+    os.environ["DISPLAY"] = f":{display_num}"
 
     try:
-        logger.info(f"[{os.getpid()}] [INFO] Запускаем браузер...")
+        logger.info(f"[{process_id}] [INFO] Запускаем браузер...")
         driver = init_driver(process_id)
         for url, description in descriptions.items():
             attempts = 0
@@ -78,14 +79,14 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
 
             while attempts < max_attempts:
                 try:
-                    logger.info(f"{current_count}/{all_count} [{os.getpid()}] [INFO] Открываем страницу: {url}")
+                    logger.info(f"{current_count}/{all_count} [{process_id}] [INFO] Открываем страницу: {url}")
                     driver.get(url)
 
                     # Ожидание полной загрузки страницы
                     WebDriverWait(driver, 20).until(
                         EC.presence_of_element_located((By.TAG_NAME, "body"))
                     )
-                    logger.info(f"[{os.getpid()}] [INFO] Страница загружена!")
+                    logger.info(f"[{process_id}] [INFO] Страница загружена!")
 
                     # Ищем блок описания
                     description_block = WebDriverWait(driver, 10).until(
@@ -101,32 +102,32 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
                     if first_paragraph:
                         description = first_paragraph.text.strip()
 
-                    logger.info(f"[{os.getpid()}] [INFO] Описание: {description}")
+                    logger.info(f"[{process_id}] [INFO] Описание: {description}")
 
                     if len(description) > 5:
                         descriptions[url] = description
                     else:
-                        logger.info(f"[{os.getpid()}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                        logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
                     break
 
                 except Exception as e:
                     attempts += 1
-                    logger.error(f"[{os.getpid()}] [ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
+                    logger.error(f"[{process_id}] [ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
 
                     # Проверяем статус загрузки
                     status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
-                    logger.info(f"[{os.getpid()}] [INFO] Статус-код {url}: {status_code}")
+                    logger.info(f"[{process_id}] [INFO] Статус-код {url}: {status_code}")
 
                     if attempts > 3 and status_code != 'complete':
                         asyncio.run(delete_event_by_url(url))
-                        logger.warning(f"[{os.getpid()}] [WARNING] Страница {url} не загрузилась! Удаляем из базы.")
+                        logger.warning(f"[{process_id}] [WARNING] Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
                     driver.quit()
                     time.sleep(5)
                     driver = init_driver()
-                    logger.info(f'[{os.getpid()}] [INFO] Браузер перезапущен')
+                    logger.info(f'[{process_id}] [INFO] Браузер перезапущен')
                     time.sleep(5)
 
             time.sleep(random.uniform(0.5, 2))  # Задержка для избежания бана
@@ -135,10 +136,10 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
         return descriptions
 
     except Exception as e:
-        logger.error(f"[{os.getpid()}] [ERROR] Произошла ошибка:")
+        logger.error(f"[{process_id}] [ERROR] Произошла ошибка:")
         logger.error(traceback.format_exc())
 
     finally:
         if 'driver' in locals():
             driver.quit()
-            logger.info(f"[{os.getpid()}] [INFO] Браузер закрыт!")
+            logger.info(f"[{process_id}] [INFO] Браузер закрыт!")
