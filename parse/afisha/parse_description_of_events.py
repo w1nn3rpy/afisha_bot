@@ -17,13 +17,17 @@ from config import logger
 from database.events_db import delete_event_by_url
 
 
-def init_driver():
+def init_driver(process_id):
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
+
+    # Уникальный профиль для каждого процесса
+    user_data_dir = f"/tmp/undetected_chrome_{process_id}"
+    options.add_argument(f"--user-data-dir={user_data_dir}")
 
     driver = uc.Chrome(options=options)
     return driver
@@ -41,7 +45,7 @@ def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
 
     try:
         logger.info("[INFO] Запускаем браузер...")
-        driver = init_driver()
+        driver = init_driver(os.getpid())
         for url, description in descriptions.items():
             attempts = 0
             max_attempts = 5
