@@ -17,7 +17,7 @@ from config import logger
 from database.events_db import delete_event_by_url
 
 
-def init_driver(process_id):
+def init_driver():
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
     options.add_argument("--no-sandbox")
@@ -26,10 +26,11 @@ def init_driver(process_id):
     options.add_argument("--disable-blink-features=AutomationControlled")
 
     # Уникальный профиль для каждого процесса
-    user_data_dir = f"/tmp/undetected_chrome_{process_id}"
+    user_data_dir = f"/tmp/undetected_chrome_{os.getpid()}"
     options.add_argument(f"--user-data-dir={user_data_dir}")
 
     driver = uc.Chrome(options=options)
+    logger.info(f"[{os.getpid()}] Инициализация драйвера...")
     return driver
 
 def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
@@ -44,8 +45,8 @@ def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
     os.environ["DISPLAY"] = ":99"
 
     try:
-        logger.info("[INFO] Запускаем браузер...")
-        driver = init_driver(os.getpid())
+        logger.info(f"[{os.getpid()}] [INFO] Запускаем браузер...")
+        driver = init_driver()
         for url, description in descriptions.items():
             attempts = 0
             max_attempts = 5
@@ -98,13 +99,13 @@ def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
                         break
 
                     driver.quit()
-                    asyncio.sleep(5)
+                    time.sleep(5)
                     driver = init_driver()
                     logger.info(f'[{os.getpid()}] [INFO] Браузер перезапущен')
-                    asyncio.sleep(5)
+                    time.sleep(5)
 
+            time.sleep(random.uniform(0.5, 2))  # Задержка для избежания бана
             current_count += 1
-            asyncio.sleep(1)
 
         return descriptions
 
