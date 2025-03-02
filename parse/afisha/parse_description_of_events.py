@@ -55,9 +55,21 @@ async def get_descriptions() -> Dict[str, str] | None:
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
                     )
                     description = description_block.text.strip()
-                except:
+                except Exception as e:
                     logger.error(f"[ERROR] Ошибка при обработке {url}: {e}")
-                    description = "Нет описания"
+                    descriptions[url] = "Нет описания"
+                    driver.quit()
+                    await asyncio.sleep(5)
+                    # 🚀 Настройки браузера
+                    options = uc.ChromeOptions()
+                    options.add_argument("--no-sandbox")
+                    options.add_argument("--disable-gpu")
+                    options.add_argument("--disable-dev-shm-usage")
+                    options.add_argument("--disable-blink-features=AutomationControlled")
+
+                    driver = uc.Chrome(options=options)
+                    logger.info('[INFO] Браузер перезапущен')
+                    await asyncio.sleep(5)
 
                 logger.info(f"[INFO] Описание: {description}")
                 descriptions[url] = description
