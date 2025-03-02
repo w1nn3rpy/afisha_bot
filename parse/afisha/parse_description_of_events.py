@@ -87,6 +87,9 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                     logger.info('[INFO] Браузер перезапущен')
                     await asyncio.sleep(5)
 
+            if current_count == 15:
+                print('остановочка')
+                break
             current_count += 1
             await asyncio.sleep(1)
 
