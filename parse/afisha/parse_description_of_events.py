@@ -6,6 +6,7 @@ import traceback
 from typing import Dict
 
 import undetected_chromedriver as uc
+from asyncpg import Record
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -14,11 +15,7 @@ from config import logger
 from database.events_db import get_events_without_description
 
 
-async def get_descriptions() -> Dict[str, str] | None:
-
-    list_of_links = await get_events_without_description()
-    if list_of_links is None:
-        return None
+async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None:
 
     descriptions = {record['source']: 'None' for record in list_of_links}
     all_count = len(list_of_links)
@@ -39,25 +36,33 @@ async def get_descriptions() -> Dict[str, str] | None:
         logger.info("[INFO] Запускаем браузер...")
         driver = uc.Chrome(options=options)
         for url, description in descriptions.items():
-            try:
-                logger.info(f"{current_count}/{all_count} [INFO] Открываем страницу: {url}")
-                driver.get(url)
+            attempts = 0
+            max_attempts = 5
 
-                # Ожидание полной загрузки страницы
-                WebDriverWait(driver, 20).until(
-                    EC.presence_of_element_located((By.TAG_NAME, "body"))
-                )
-                logger.info("[INFO] Страница загружена!")
-
-                # Ищем блок описания
+            while attempts < max_attempts:
                 try:
+                    logger.info(f"{current_count}/{all_count} [INFO] Открываем страницу: {url}")
+                    driver.get(url)
+
+                    # Ожидание полной загрузки страницы
+                    WebDriverWait(driver, 20).until(
+                        EC.presence_of_element_located((By.TAG_NAME, "body"))
+                    )
+                    logger.info("[INFO] Страница загружена!")
+
+                    # Ищем блок описания
                     description_block = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
                     )
                     description = description_block.text.strip()
+
+                    logger.info(f"[INFO] Описание: {description}")
+                    descriptions[url] = description
+                    break
+
                 except Exception as e:
-                    logger.error(f"[ERROR] Ошибка при обработке {url}: {e}")
-                    descriptions[url] = "Нет описания"
+                    attempts += 1
+                    logger.error(f"[ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
                     driver.quit()
                     await asyncio.sleep(5)
                     # 🚀 Настройки браузера
@@ -71,28 +76,8 @@ async def get_descriptions() -> Dict[str, str] | None:
                     logger.info('[INFO] Браузер перезапущен')
                     await asyncio.sleep(5)
 
-                logger.info(f"[INFO] Описание: {description}")
-                descriptions[url] = description
-
-            except Exception as e:
-
-                logger.error(f"[ERROR] Ошибка при обработке {url}: {e}")
-                descriptions[url] = "Нет описания"
-                driver.quit()
-                await asyncio.sleep(5)
-                # 🚀 Настройки браузера
-                options = uc.ChromeOptions()
-                options.add_argument("--no-sandbox")
-                options.add_argument("--disable-gpu")
-                options.add_argument("--disable-dev-shm-usage")
-                options.add_argument("--disable-blink-features=AutomationControlled")
-
-                driver = uc.Chrome(options=options)
-                logger.info('[INFO] Браузер перезапущен')
-                await asyncio.sleep(5)
-
             current_count += 1
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
 
         return descriptions
 
