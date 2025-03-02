@@ -45,7 +45,7 @@ async def add_descriptions(descriptions:dict):
 
         query = '''
         UPDATE events
-        SET descriptions = $2 
+        SET description = $2 
         WHERE source = $1'''
 
         for url, description in descriptions.items():
