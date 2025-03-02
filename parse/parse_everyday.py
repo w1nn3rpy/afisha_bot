@@ -19,8 +19,8 @@ def run_parallel(urls: List[str], num_processes: int = 4) -> Dict[str, str]:
     logger.info(f"🔄 Запускаем {num_processes} процессов, каждая часть содержит {chunk_size} ссылок...")
 
     with multiprocessing.Pool(processes=num_processes) as pool:
-        results = pool.starmap(get_descriptions, [(i, chunk) for i, chunk in enumerate(url_chunks)])
-        # results = pool.map(get_descriptions, url_chunks)
+        # results = pool.starmap(get_descriptions, [(i, chunk) for i, chunk in enumerate(url_chunks)])
+        results = pool.map(get_descriptions, url_chunks)
 
     # Объединяем результаты всех процессов в один словарь
     merged_results = {}
