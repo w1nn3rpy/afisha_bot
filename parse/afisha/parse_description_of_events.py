@@ -3,7 +3,7 @@ import os
 import random
 import time
 import traceback
-from typing import Dict
+from typing import Dict, List
 
 import requests
 import undetected_chromedriver as uc
@@ -28,9 +28,10 @@ def init_driver():
     driver = uc.Chrome(options=options)
     return driver
 
-async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None:
+async def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
 
-    descriptions = {record['source']: 'Нет описания' for record in list_of_links}
+    descriptions = {url: 'Нет описания' for url in list_of_links}
+
     all_count = len(list_of_links)
     current_count = 0
 
@@ -47,14 +48,14 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
 
             while attempts < max_attempts:
                 try:
-                    logger.info(f"{current_count}/{all_count} [INFO] Открываем страницу: {url}")
+                    logger.info(f"{current_count}/{all_count} [{os.getpid()}] [INFO] Открываем страницу: {url}")
                     driver.get(url)
 
                     # Ожидание полной загрузки страницы
                     WebDriverWait(driver, 20).until(
                         EC.presence_of_element_located((By.TAG_NAME, "body"))
                     )
-                    logger.info("[INFO] Страница загружена!")
+                    logger.info(f"[{os.getpid()}] [INFO] Страница загружена!")
 
                     # Ищем блок описания
                     description_block = WebDriverWait(driver, 10).until(
@@ -70,32 +71,32 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                     if first_paragraph:
                         description = first_paragraph.text.strip()
 
-                    logger.info(f"[INFO] Описание: {description}")
+                    logger.info(f"[{os.getpid()}] [INFO] Описание: {description}")
 
                     if len(description) > 5:
                         descriptions[url] = description
                     else:
-                        logger.info(f"[INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                        logger.info(f"[{os.getpid()}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
                     break
 
                 except Exception as e:
                     attempts += 1
-                    logger.error(f"[ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
+                    logger.error(f"[{os.getpid()}] [ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
 
                     # Проверяем статус загрузки
                     status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
-                    logger.info(f"[INFO] Статус-код {url}: {status_code}")
+                    logger.info(f"[{os.getpid()}] [INFO] Статус-код {url}: {status_code}")
 
                     if attempts > 3 and status_code != 'complete':
                         await delete_event_by_url(url)
-                        logger.warning(f"[WARNING] Страница {url} не загрузилась! Удаляем из базы.")
+                        logger.warning(f"[{os.getpid()}] [WARNING] Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
                     driver.quit()
                     await asyncio.sleep(5)
                     driver = init_driver()
-                    logger.info('[INFO] Браузер перезапущен')
+                    logger.info(f'[{os.getpid()}] [INFO] Браузер перезапущен')
                     await asyncio.sleep(5)
 
             current_count += 1
@@ -104,10 +105,10 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
         return descriptions
 
     except Exception as e:
-        logger.error("[ERROR] Произошла ошибка:")
+        logger.error(f"[{os.getpid()}] [ERROR] Произошла ошибка:")
         logger.error(traceback.format_exc())
 
     finally:
         if 'driver' in locals():
             driver.quit()
-            logger.info("[INFO] Браузер закрыт!")
+            logger.info(f"[{os.getpid()}] [INFO] Браузер закрыт!")
