@@ -5,6 +5,7 @@ import time
 import traceback
 from typing import Dict
 
+import requests
 import undetected_chromedriver as uc
 from asyncpg import Record
 from selenium.webdriver.common.by import By
@@ -12,7 +13,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from config import logger
-from database.events_db import get_events_without_description
 
 
 async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None:
@@ -38,6 +38,10 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
         for url, description in descriptions.items():
             attempts = 0
             max_attempts = 5
+
+            # Проверяем статус загрузки
+            status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
+            logger.info(f"[INFO] Статус-код {url}: {status_code}")
 
             while attempts < max_attempts:
                 try:
