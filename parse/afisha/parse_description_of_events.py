@@ -64,7 +64,6 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
 
     try:
         logger.info(f"[{os.getpid()}] [INFO] Запускаем браузер...")
-        process_id = os.getpid()  # Вместо передачи process_id получаем PID
         driver = init_driver(process_id)
         for url, description in descriptions.items():
             attempts = 0
