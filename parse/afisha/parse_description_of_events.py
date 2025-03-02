@@ -87,7 +87,7 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
 
             while attempts < max_attempts:
                 try:
-                    logger.info(f"{current_count}/{all_count} [{process_id}] [INFO] Открываем страницу: {url}")
+                    logger.info(f"[{process_id}] [INFO] {current_count}/{all_count} Открываем страницу: {url}")
                     driver.get(url)
 
                     # Ожидание полной загрузки страницы
