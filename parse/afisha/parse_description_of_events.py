@@ -8,6 +8,7 @@ from typing import Dict
 import requests
 import undetected_chromedriver as uc
 from asyncpg import Record
+from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -55,7 +56,15 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                     description_block = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
                     )
-                    description = description_block.text.strip()
+
+                    # Извлекаем HTML содержимое блока
+                    soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
+
+                    # Находим первый абзац <p> внутри блока
+                    first_paragraph = soup.find("p")
+
+                    if first_paragraph:
+                        description = description_block.text.strip()
 
                     logger.info(f"[INFO] Описание: {description}")
                     if len(description) > 5:
