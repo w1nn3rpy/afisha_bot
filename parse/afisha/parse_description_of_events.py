@@ -17,6 +17,17 @@ from config import logger
 from database.events_db import delete_event_by_url
 
 
+def init_driver():
+    """Создает и настраивает Chrome для парсинга."""
+    options = uc.ChromeOptions()
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+
+    driver = uc.Chrome(options=options)
+    return driver
+
 async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None:
 
     descriptions = {record['source']: 'Нет описания' for record in list_of_links}
@@ -27,16 +38,9 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
     os.system("Xvfb :99 -screen 0 1920x1080x24 &")
     os.environ["DISPLAY"] = ":99"
 
-    # 🚀 Настройки браузера
-    options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-
     try:
         logger.info("[INFO] Запускаем браузер...")
-        driver = uc.Chrome(options=options)
+        driver = init_driver()
         for url, description in descriptions.items():
             attempts = 0
             max_attempts = 5
@@ -64,7 +68,7 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                     first_paragraph = soup.find("p")
 
                     if first_paragraph:
-                        description = description_block.text.strip()
+                        description = first_paragraph.text.strip()
 
                     logger.info(f"[INFO] Описание: {description}")
 
@@ -90,14 +94,7 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
 
                     driver.quit()
                     await asyncio.sleep(5)
-                    # 🚀 Настройки браузера
-                    options = uc.ChromeOptions()
-                    options.add_argument("--no-sandbox")
-                    options.add_argument("--disable-gpu")
-                    options.add_argument("--disable-dev-shm-usage")
-                    options.add_argument("--disable-blink-features=AutomationControlled")
-
-                    driver = uc.Chrome(options=options)
+                    driver = init_driver()
                     logger.info('[INFO] Браузер перезапущен')
                     await asyncio.sleep(5)
 

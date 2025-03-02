@@ -1,8 +1,19 @@
 import asyncio
+import multiprocessing
+from typing import List
+
+from asyncpg import Record
 
 from database.events_db import add_events, add_descriptions, get_events_without_description
 from parse.afisha.parse_events import get_all_events
 from parse.afisha.parse_description_of_events import get_descriptions
+
+def run_parallel(urls: List[Record], num_processes=4):
+    """Запускает парсинг в несколько процессов."""
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        results = pool.map(get_descriptions, urls)
+    return results
+
 
 async def parse_everyday_afisha():
     # all_events_list_of_dicts = get_all_events()
@@ -14,7 +25,7 @@ async def parse_everyday_afisha():
     list_of_links = await get_events_without_description()
 
     if list_of_links is not None:
-        description = await get_descriptions(list_of_links)
+        description = await run_parallel(list_of_links)
         await add_descriptions(description)
 
 
