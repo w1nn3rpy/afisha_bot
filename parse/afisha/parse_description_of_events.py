@@ -1,6 +1,7 @@
 import asyncio
 import os
 import random
+import tempfile
 import time
 import traceback
 from typing import Dict, List
@@ -18,22 +19,39 @@ from database.events_db import delete_event_by_url
 
 
 def init_driver(process_id):
+    # Уникальный профиль для каждого процесса
+    # Создаем уникальную папку для каждого процесса
+    user_data_dir = tempfile.mkdtemp(prefix=f"chrome_profile_{process_id}_")
+
+    # Создаем уникальный путь для undetected_chromedriver
+    uc_patcher_dir = f"/root/.local/share/undetected_chromedriver_{process_id}"
+    os.makedirs(uc_patcher_dir, exist_ok=True)
+
+    # Если в этой папке уже есть файл драйвера — удаляем, чтобы избежать блокировки
+    existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
+    if os.path.exists(existing_driver):
+        try:
+            os.remove(existing_driver)
+        except Exception:
+            pass  # Игнорируем ошибку удаления, если процесс его уже использует
+
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
-
-    # Уникальный профиль для каждого процесса
-    user_data_dir = f"/tmp/undetected_chrome_{process_id}"
     options.add_argument(f"--user-data-dir={user_data_dir}")
 
-    driver = uc.Chrome(options=options)
+    driver = uc.Chrome(options=options,
+                       driver_executable_path=existing_driver if os.path.exists(existing_driver) else None,
+                       use_subprocess=True)
+
     logger.info(f"[{process_id}] Инициализация драйвера...")
+
     return driver
 
-def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
+def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
 
     descriptions = {url: 'Нет описания' for url in list_of_links}
 
