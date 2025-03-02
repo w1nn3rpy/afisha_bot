@@ -102,7 +102,7 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
                         if "Данная страница не найдена!" in error_element.text:
                             logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
                             asyncio.run(delete_event_by_url(url))
-                            continue  # Пропускаем обработку этой страницы
+                            break  # Пропускаем обработку этой страницы
                     except:
                         pass  # Ошибки нет, продолжаем
 
