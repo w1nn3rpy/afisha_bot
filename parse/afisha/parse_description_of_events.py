@@ -27,13 +27,13 @@ def init_driver(process_id):
     uc_patcher_dir = f"/root/git/afisha_bot/chromedriver{process_id}"
     os.makedirs(uc_patcher_dir, exist_ok=True)
 
-    # Если в этой папке уже есть файл драйвера — удаляем, чтобы избежать блокировки
+    # # Если в этой папке уже есть файл драйвера — удаляем, чтобы избежать блокировки
     existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
-    if os.path.exists(existing_driver):
-        try:
-            os.remove(existing_driver)
-        except Exception:
-            pass  # Игнорируем ошибку удаления, если процесс его уже использует
+    # if os.path.exists(existing_driver):
+    #     try:
+    #         os.remove(existing_driver)
+    #     except Exception:
+    #         pass  # Игнорируем ошибку удаления, если процесс его уже использует
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
@@ -43,7 +43,7 @@ def init_driver(process_id):
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument(f"--user-data-dir={user_data_dir}")
 
-    driver = uc.Chrome(driver_executable_path="/usr/bin/chromedriver", use_subprocess=True)
+    driver = uc.Chrome(driver_executable_path=existing_driver, use_subprocess=True)
 
     # driver = uc.Chrome(options=options,
     #                    driver_executable_path=existing_driver if os.path.exists(existing_driver) else None,
