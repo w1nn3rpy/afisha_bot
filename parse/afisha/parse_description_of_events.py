@@ -108,12 +108,12 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
                     first_paragraph = soup.find("p")
 
                     if first_paragraph:
-                        description = first_paragraph.text.strip()
+                        new_description = first_paragraph.text.strip()
 
-                    logger.info(f"[{process_id}] [INFO] Описание: {description}")
+                    logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
 
                     if len(description) > 5:
-                        descriptions[url] = description
+                        descriptions[url] = new_description
                     else:
                         logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
