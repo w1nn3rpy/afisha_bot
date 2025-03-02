@@ -67,9 +67,12 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                         description = description_block.text.strip()
 
                     logger.info(f"[INFO] Описание: {description}")
+
                     if len(description) > 5:
                         descriptions[url] = description
+                    else:
                         logger.info(f"[INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+
                     break
 
                 except Exception as e:
