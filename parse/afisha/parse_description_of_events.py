@@ -43,7 +43,12 @@ def init_driver(process_id):
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument(f"--user-data-dir={user_data_dir}")
 
-    driver = uc.Chrome(driver_executable_path=existing_driver, use_subprocess=True)
+    port = 9222 + process_id  # Разные порты для разных процессов
+
+    driver = uc.Chrome(options=options,
+                       driver_executable_path=existing_driver,
+                       port=port,
+                       use_subprocess=True)
 
     # driver = uc.Chrome(options=options,
     #                    driver_executable_path=existing_driver if os.path.exists(existing_driver) else None,
