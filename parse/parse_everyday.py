@@ -9,7 +9,7 @@ from database.events_db import add_events, add_descriptions, get_events_without_
 from parse.afisha.parse_events import get_all_events
 from parse.afisha.parse_description_of_events import get_descriptions
 
-def run_parallel(urls: List[str], num_processes: int = 4) -> Dict[str, str]:
+def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     """
     Запускает парсинг в несколько процессов и объединяет результаты.
     """
