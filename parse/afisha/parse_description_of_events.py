@@ -134,7 +134,7 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
 
                     driver.quit()
                     time.sleep(5)
-                    driver = init_driver()
+                    driver = init_driver(process_id)
                     logger.info(f'[{process_id}] [INFO] Браузер перезапущен')
                     time.sleep(5)
 
