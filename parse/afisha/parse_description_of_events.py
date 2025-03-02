@@ -51,15 +51,6 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                     )
                     logger.info("[INFO] Страница загружена!")
 
-                    # Проверяем статус загрузки
-                    status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
-                    logger.info(f"[INFO] Статус-код {url}: {status_code}")
-
-                    if status_code != 'complete':
-                        await delete_event_by_url(url)
-                        logger.warning(f"[WARNING] Страница {url} не загрузилась! Удаляем из базы.")
-                        break
-
                     # Ищем блок описания
                     description_block = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
@@ -73,6 +64,16 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                 except Exception as e:
                     attempts += 1
                     logger.error(f"[ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
+
+                    # Проверяем статус загрузки
+                    status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
+                    logger.info(f"[INFO] Статус-код {url}: {status_code}")
+
+                    if attempts > 3 and status_code != 'complete':
+                        await delete_event_by_url(url)
+                        logger.warning(f"[WARNING] Страница {url} не загрузилась! Удаляем из базы.")
+                        break
+
                     driver.quit()
                     await asyncio.sleep(5)
                     # 🚀 Настройки браузера
