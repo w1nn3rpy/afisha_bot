@@ -15,6 +15,8 @@ async def parse_everyday_afisha():
 
     if list_of_links is not None:
         description = await get_descriptions(list_of_links)
+        print('description type: ', type(description))
+        print('description: ', description)
         await add_descriptions(description)
 
 
