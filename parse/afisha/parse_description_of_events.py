@@ -43,6 +43,13 @@ def init_driver(process_id):
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument(f"--user-data-dir={user_data_dir}")
     options.add_argument("--profile-directory=Default")
+    prefs = {
+        "profile.managed_default_content_settings.images": 2,  # Выключаем загрузку картинок
+        "profile.default_content_setting_values.notifications": 2,  # Выключаем всплывающие окна
+        "profile.default_content_setting_values.geolocation": 2,  # Запрещаем геолокацию
+    }
+    options.add_experimental_option("prefs", prefs)
+    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений
 
     port = 9222 + process_id  # Разные порты для разных процессов
 
