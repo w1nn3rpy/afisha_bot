@@ -96,6 +96,16 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
                     )
                     logger.info(f"[{process_id}] [INFO] Страница загружена!")
 
+                    # Проверка на 404 ошибку
+                    try:
+                        error_element = driver.find_element(By.CSS_SELECTOR, "h1.error-page__title")
+                        if "Данная страница не найдена!" in error_element.text:
+                            logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
+                            asyncio.run(delete_event_by_url(url))
+                            continue  # Пропускаем обработку этой страницы
+                    except:
+                        pass  # Ошибки нет, продолжаем
+
                     # Ищем блок описания
                     description_block = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
@@ -122,11 +132,7 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
                     attempts += 1
                     logger.error(f"[{process_id}] [ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
 
-                    # Проверяем статус загрузки
-                    status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
-                    logger.info(f"[{process_id}] [INFO] Статус-код {url}: {status_code}")
-
-                    if attempts > 3 and status_code != 'complete':
+                    if attempts > 3:
                         asyncio.run(delete_event_by_url(url))
                         logger.warning(f"[{process_id}] [WARNING] Страница {url} не загрузилась! Удаляем из базы.")
                         break
@@ -139,12 +145,13 @@ def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | N
 
             time.sleep(random.uniform(0.5, 2))  # Задержка для избежания бана
             current_count += 1
-
+        logger.info(f'[{process_id}] [INFO] возвращение значений descriptions')
         return descriptions
 
     except Exception as e:
         logger.error(f"[{process_id}] [ERROR] Произошла ошибка:")
         logger.error(traceback.format_exc())
+        return descriptions
 
     finally:
         if 'driver' in locals():

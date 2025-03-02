@@ -25,7 +25,8 @@ def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     # Объединяем результаты всех процессов в один словарь
     merged_results = {}
     for result in results:
-        merged_results.update(result)
+        if result:
+            merged_results.update(result)
 
     return merged_results
 
