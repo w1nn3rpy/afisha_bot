@@ -28,7 +28,7 @@ def init_driver():
     driver = uc.Chrome(options=options)
     return driver
 
-async def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
+def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
 
     descriptions = {url: 'Нет описания' for url in list_of_links}
 
@@ -89,18 +89,18 @@ async def get_descriptions(list_of_links: List[str]) -> Dict[str, str] | None:
                     logger.info(f"[{os.getpid()}] [INFO] Статус-код {url}: {status_code}")
 
                     if attempts > 3 and status_code != 'complete':
-                        await delete_event_by_url(url)
+                        asyncio.run(delete_event_by_url(url))
                         logger.warning(f"[{os.getpid()}] [WARNING] Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
                     driver.quit()
-                    await asyncio.sleep(5)
+                    asyncio.sleep(5)
                     driver = init_driver()
                     logger.info(f'[{os.getpid()}] [INFO] Браузер перезапущен')
-                    await asyncio.sleep(5)
+                    asyncio.sleep(5)
 
             current_count += 1
-            await asyncio.sleep(1)
+            asyncio.sleep(1)
 
         return descriptions
 
