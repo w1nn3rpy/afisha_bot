@@ -81,3 +81,20 @@ async def get_events_without_description():
     finally:
         if conn:
             await conn.close()
+
+async def delete_event_by_url(url):
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = '''
+        DELETE FROM events
+        WHERE source = $1'''
+
+        await conn.execute(query, url)
+
+    except Exception as e:
+        logger.error(f'Произошла ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()

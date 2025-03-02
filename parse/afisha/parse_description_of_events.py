@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from config import logger
+from database.events_db import delete_event_by_url
 
 
 async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None:
@@ -39,10 +40,6 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
             attempts = 0
             max_attempts = 5
 
-            # Проверяем статус загрузки
-            status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
-            logger.info(f"[INFO] Статус-код {url}: {status_code}")
-
             while attempts < max_attempts:
                 try:
                     logger.info(f"{current_count}/{all_count} [INFO] Открываем страницу: {url}")
@@ -53,6 +50,15 @@ async def get_descriptions(list_of_links: list[Record]) -> Dict[str, str] | None
                         EC.presence_of_element_located((By.TAG_NAME, "body"))
                     )
                     logger.info("[INFO] Страница загружена!")
+
+                    # Проверяем статус загрузки
+                    status_code = driver.execute_script("return document.readyState")  # "complete" = 200 OK
+                    logger.info(f"[INFO] Статус-код {url}: {status_code}")
+
+                    if status_code != 'complete':
+                        await delete_event_by_url(url)
+                        logger.warning(f"[WARNING] Страница {url} не загрузилась! Удаляем из базы.")
+                        break
 
                     # Ищем блок описания
                     description_block = WebDriverWait(driver, 10).until(
