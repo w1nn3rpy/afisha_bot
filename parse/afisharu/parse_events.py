@@ -13,7 +13,7 @@ from config import logger
 BASE_URL = "https://www.afisha.ru/tomsk/events/page{}/performances/exhibitions/concerts/"
 
 
-def get_all_events() -> List[dict] | None:
+def get_all_events_afisharu() -> List[dict] | None:
     # Проверяем наличие Google Chrome
     CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
     if not CHROME_PATH:
@@ -97,7 +97,7 @@ def get_all_events() -> List[dict] | None:
 
 
 if __name__ == "__main__":
-    results = get_all_events()
+    results = get_all_events_afisharu()
     if results:
         for event in results[:5]:  # Выводим первые 5 событий для проверки
             print(event)

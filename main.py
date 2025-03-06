@@ -4,7 +4,8 @@ from config import dp, bot, logger
 from database.models import create_table_if_not_exist
 from handlers.admin_handlers import set_commands, admin_router
 from handlers.user_handlers import user_router
-from parse.parse_everyday import parse_everyday_afisha
+from parse.parse_everyday import parse_everyday_ticketland, parse_everyday_afisharu
+from parse.afisharu.parse_events import get_all_events_afisharu
 
 
 
@@ -14,7 +15,7 @@ async def main():
     dp.include_router(user_router)
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands()
-    # await parse_everyday_afisha()
+    await parse_everyday_afisharu()
     await dp.start_polling(bot)
 
 try:

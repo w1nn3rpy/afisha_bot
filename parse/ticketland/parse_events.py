@@ -36,7 +36,7 @@ def clean_date(date_text):
     return "Неизвестно", "Неизвестно"
 
 
-def get_all_events() -> List[dict] | None:
+def get_all_events_ticketland() -> List[dict] | None:
     # Проверяем наличие Google Chrome
     CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
     if not CHROME_PATH:
@@ -124,7 +124,7 @@ def get_all_events() -> List[dict] | None:
 
 
 if __name__ == "__main__":
-    results = get_all_events()
+    results = get_all_events_ticketland()
     if results:
         for event in results[:5]:  # Выводим первые 5 событий для проверки
             print(event)

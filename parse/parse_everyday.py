@@ -6,7 +6,8 @@ from asyncpg import Record
 
 from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description
-from parse.ticketland.parse_events import get_all_events
+from parse.ticketland.parse_events import get_all_events_ticketland
+from parse.afisharu.parse_events import get_all_events_afisharu
 from parse.ticketland.parse_description_of_events import get_descriptions
 
 def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
@@ -31,8 +32,8 @@ def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     return merged_results
 
 
-async def parse_everyday_afisha():
-    # all_events_list_of_dicts = get_all_events()
+async def parse_everyday_ticketland():
+    # all_events_list_of_dicts = get_all_events_ticketland()
     link_of_events = []
 
     # if all_events_list_of_dicts is not None:
@@ -45,6 +46,10 @@ async def parse_everyday_afisha():
         description = run_parallel(list_of_links)
         await add_descriptions(description)
 
+async def parse_everyday_afisharu():
+    all_events_list_of_dicts = get_all_events_afisharu()
+    print(all_events_list_of_dicts)
+
 
 if __name__ == "__main__":
-    asyncio.run(parse_everyday_afisha())
+    asyncio.run(parse_everyday_afisharu())
