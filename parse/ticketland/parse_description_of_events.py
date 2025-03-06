@@ -6,9 +6,7 @@ import time
 import traceback
 from typing import Dict, List
 
-import requests
 import undetected_chromedriver as uc
-from asyncpg import Record
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -27,13 +25,7 @@ def init_driver(process_id):
     uc_patcher_dir = f"/root/git/afisha_bot/chromedriver{process_id}"
     os.makedirs(uc_patcher_dir, exist_ok=True)
 
-    # # Если в этой папке уже есть файл драйвера — удаляем, чтобы избежать блокировки
     existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
-    # if os.path.exists(existing_driver):
-    #     try:
-    #         os.remove(existing_driver)
-    #     except Exception:
-    #         pass  # Игнорируем ошибку удаления, если процесс его уже использует
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
@@ -57,10 +49,6 @@ def init_driver(process_id):
                        driver_executable_path=existing_driver,
                        port=port,
                        use_subprocess=True)
-
-    # driver = uc.Chrome(options=options,
-    #                    driver_executable_path=existing_driver if os.path.exists(existing_driver) else None,
-    #                    use_subprocess=True)
 
     logger.info(f"[{process_id}] Инициализация драйвера...")
 

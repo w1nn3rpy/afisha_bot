@@ -6,8 +6,8 @@ from asyncpg import Record
 
 from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description
-from parse.afisha.parse_events import get_all_events
-from parse.afisha.parse_description_of_events import get_descriptions
+from parse.ticketland.parse_events import get_all_events
+from parse.ticketland.parse_description_of_events import get_descriptions
 
 def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     """
