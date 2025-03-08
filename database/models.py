@@ -24,7 +24,7 @@ async def create_table_if_not_exist():
             )''',
 
             'temp_events_table': '''
-            CREATE TABLE events (
+            CREATE TABLE temp_events_table (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
             category VARCHAR(255) DEFAULT 'Категория не указана',
