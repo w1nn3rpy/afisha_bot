@@ -33,22 +33,27 @@ def get_event_description(url: str) -> Dict[str, str]:
             pass  # Ошибки нет, продолжаем
 
         try:
+            # Ждём появления блока описания
             description_block = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-test='OBJECT-DESCRIPTION-CONTENT']"))
             )
-
             soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
 
-            # Извлекаем описание из блока
-            first_paragraph = soup.find("div", class_="tlLlr")  # Основной контейнер текста
-            if first_paragraph:
-                description = first_paragraph.text.strip()
-                logger.info(f"✅ Описание найдено: {description}")
-            else:
-                logger.warning(f"❌ Описание не найдено в блоке! {url}")
+            # Пробуем найти основной текст внутри RESTRICT-TEXT
+            first_paragraph = soup.find("div", {"data-test": "RESTRICT-TEXT"})
+
+            if not first_paragraph:
+                logger.warning(f"❌ Описание не найдено в `RESTRICT-TEXT`! {url}")
+                return {url: "Нет описания"}
+
+            # Берём текст внутри этого контейнера
+            description = first_paragraph.text.strip()
+
+            logger.info(f"✅ Описание найдено: {description}")
 
         except Exception as e:
             logger.error(f"❌ Ошибка при обработке {url}: {e}")
+
 
     finally:
         driver.quit()
