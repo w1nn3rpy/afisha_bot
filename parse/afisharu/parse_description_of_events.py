@@ -21,8 +21,11 @@ def get_event_description(url: str) -> Dict[str, str]:
     try:
         logger.info(f"Открываем страницу: {url}")
         driver.get(url)
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
+        )
         logger.info("Страница загружена!")
+        print(driver.page_source[:2000])
 
         try:
             error_element = driver.find_element(By.CSS_SELECTOR, "h1.error-page__title")
@@ -32,9 +35,13 @@ def get_event_description(url: str) -> Dict[str, str]:
         except:
             pass  # Ошибки нет, продолжаем
 
-        description_block = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
-        )
+        try:
+            description_block = WebDriverWait(driver, 15).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
+            )
+        except:
+            logger.warning(f"Элемент не найден на странице {url}, описание отсутствует")
+            return {url: "Нет описания"}
 
         soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
         first_paragraph = soup.find("p")
@@ -52,7 +59,6 @@ def get_event_description(url: str) -> Dict[str, str]:
 
 def get_descriptions_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     chunk_size = max(1, len(urls) // num_processes)  # Разбиваем список ссылок на части
-    url_chunks = [urls[i:i + chunk_size] for i in range(0, len(urls), chunk_size)]
     """Запускает сбор описаний в многопроцессорном режиме."""
     with multiprocessing.Pool(processes=num_processes) as pool:  # Используем 2 процесса
         results = pool.map(get_event_description, [urls_str for urls_str in urls])
