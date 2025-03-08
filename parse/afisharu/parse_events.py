@@ -33,6 +33,13 @@ def get_all_events_afisharu() -> List[dict] | None:
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+    chrome_options.add_argument("--disable-software-rasterizer")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-background-networking")
+    chrome_options.add_argument("--memory-pressure-off")
+    chrome_options.add_argument("--renderer-process-limit=2")
+    chrome_options.add_argument("--max-old-space-size=512")  # 512MB ограничение
 
     try:
         logger.info("🚀 Запускаем браузер...")
