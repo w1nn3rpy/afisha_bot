@@ -1,5 +1,4 @@
 # https://www.afisha.ru/tomsk/events/performances/exhibitions/concerts/
-
 import re
 import time
 import shutil
@@ -12,20 +11,16 @@ from config import logger
 
 BASE_URL = "https://www.afisha.ru/tomsk/events/page{}/performances/exhibitions/concerts/"
 
-
-def get_all_events_afisharu() -> List[dict] | None:
-    # Проверяем наличие Google Chrome
+def init_driver():
+    """Инициализация WebDriver с обработкой ошибок."""
     CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
     if not CHROME_PATH:
-        raise FileNotFoundError(
-            "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
+        raise FileNotFoundError("Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
 
-    # Проверяем наличие ChromeDriver
     CHROMEDRIVER_PATH = shutil.which("chromedriver")
     if not CHROMEDRIVER_PATH:
         raise FileNotFoundError("ChromeDriver не найден! Установите его.")
 
-    # Настройки Selenium
     chrome_options = Options()
     chrome_options.binary_location = CHROME_PATH
     chrome_options.add_argument("--headless")  # Без GUI
@@ -38,32 +33,49 @@ def get_all_events_afisharu() -> List[dict] | None:
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-background-networking")
     chrome_options.add_argument("--memory-pressure-off")
-    chrome_options.add_argument("--renderer-process-limit=2")
-    chrome_options.add_argument("--max-old-space-size=512")  # 512MB ограничение
+    chrome_options.add_argument("--renderer-process-limit=2")  # Ограничение рендер-процессов
+    chrome_options.add_argument("--max-old-space-size=512")  # Ограничение памяти
 
-    try:
-        logger.info("🚀 Запускаем браузер...")
-        service = Service(CHROMEDRIVER_PATH)
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+    service = Service(CHROMEDRIVER_PATH)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    return driver
 
-        events = []
-        page = 1
+def get_all_events_afisharu() -> List[dict] | None:
+    """Парсинг всех мероприятий с Афиши с защитой от крашей."""
+    attempt = 0
+    max_attempts = 3
 
-        while True:
-            url = BASE_URL.format(page)
-            logger.info(f"Найдено мероприятий: {len(events)}\n🔍 Парсим страницу {page}...")
+    while attempt < max_attempts:
+        try:
+            driver = init_driver()
+            logger.info("🚀 Запускаем браузер...")
 
-            driver.get(url)
-            soup = BeautifulSoup(driver.page_source, "html.parser")
+            events = []
+            page = 1
 
-            page_events = []
-            for event in soup.find_all("div", class_="oP17O"):
-                title_tag = event.find("a", class_="CjnHd y8A5E nbCNS yknrM")
-                category_tag = event.find("div", class_="S_wwn")
-                date_venue_tag = event.find("div", class_="_JP4u")
-                link_tag = event.find("a", class_="CjnHd y8A5E Vrui1")
+            while True:
+                url = BASE_URL.format(page)
+                logger.info(f"Найдено мероприятий: {len(events)}\n🔍 Парсим страницу {page}...")
 
-                if title_tag and date_venue_tag:
+                driver.get(url)
+                time.sleep(2)  # Ожидание загрузки страницы
+                soup = BeautifulSoup(driver.page_source, "html.parser")
+
+                page_events = []
+                event_blocks = soup.find_all("div", class_="oP17O")
+
+                if not event_blocks:
+                    logger.info("✅ Нет данных на странице, парсинг завершен.")
+                    break
+
+                for event in event_blocks:
+                    title_tag = event.find("a", class_="CjnHd y8A5E nbCNS yknrM")
+                    category_tag = event.find("div", class_="S_wwn")
+                    date_venue_tag = event.find("div", class_="_JP4u")
+
+                    if not title_tag or not date_venue_tag:
+                        continue  # Если нет данных, пропускаем
+
                     title = title_tag.text.strip()
                     event_link = f"https://www.afisha.ru{title_tag['href']}"
                     category = category_tag.text.strip() if category_tag else "Неизвестно"
@@ -83,31 +95,30 @@ def get_all_events_afisharu() -> List[dict] | None:
                     }
                     page_events.append(event_data)
 
-            if not page_events:
-                logger.info("✅ Нет данных на странице, парсинг завершен.")
-                break
+                events.extend(page_events)
+                page += 1
+                time.sleep(2)  # Пауза перед переходом на следующую страницу
 
-            events.extend(page_events)
-            page += 1
-            time.sleep(2)
-
-        return events
-
-    except Exception as e:
-        logger.error(f"❌ Ошибка парсинга: {e}")
-        return None
-
-    finally:
-        if 'driver' in locals():
             driver.quit()
-        logger.info("🛑 Браузер закрыт.")
+            return events
 
+        except Exception as e:
+            logger.error(f"❌ Ошибка парсинга (попытка {attempt+1}/{max_attempts}): {e}")
+            attempt += 1
+            time.sleep(5)  # Ожидание перед повторной попыткой
+
+            if 'driver' in locals():
+                driver.quit()  # Закрываем перед новым запуском
+                logger.info("🔄 Перезапуск браузера...")
+
+    return None  # Если после всех попыток не удалось спарсить
 
 if __name__ == "__main__":
     results = get_all_events_afisharu()
     if results:
         for event in results[:5]:  # Выводим первые 5 событий для проверки
             print(event)
+
 
 
 # [{'title': 'Подыскиваю жену, недорого!', 'date': '15 марта', 'category': 'Комедия', 'venue': 'Томский драматический театр', 'link': 'https://www.afisha.ru/performance/podyskivayu-zhenu-nedorogo-85589/'}, {'title': 'Звери', 'date': '16 марта в 19:00', 'category': 'Рок', 'venue': 'Дворец зрелищ и спорта', 'link': 'https://www.afisha.ru/concert/zveri-2282055/'}, {'title': 'Мастер-класс «Секреты глины: горшочек для меда с обжигом»', 'date': 'до 24 апреля', 'category': 'Мастер-классы', 'venue': 'Дворец народного творчества «Авангард»', 'link': 'https://www.afisha.ru/exhibition/master-klass-sekrety-gliny-gorshochek-dlya-meda-s-obzhigom-316676/'}, {'title': 'Чужих мужей не бывает', 'date': '6 апреля в 19:00', 'category': 'Комедия', 'venue': 'Томский драматический театр', 'link': 'https://www.afisha.ru/performance/chuzhih-muzhey-ne-byvaet-201745/'}, {'title': 'Шоу Иллюзии XXI века', 'date': '8 марта', 'category': 'Детский', 'venue': 'Версия', 'link': 'https://www.afisha.ru/performance/shou-illyuzii-xxi-veka-1000081/'}, {'title': 'Комната культуры', 'date': '15 марта в 20:00', 'category': 'Поп', 'venue': 'Face Club', 'link': 'https://www.afisha.ru/concert/komnata-kultury-2234979/'}, {'title': 'Мастер-класс «Искусство обжига: создаем бокал своей мечты»', 'date': 'до 24 апреля', 'category': 'Мастер-классы', 'venue': 'Дворец народного творчества «Авангард»', 'link': 'https://www.afisha.ru/exhibition/master-klass-iskusstvo-obzhiga-sozdaem-bokal-svoey-mechty-316677/'}, {'title': 'Цветы для Элджернона', 'date': '28 и 29 марта', 'category': 'Драматический', 'venue': 'Дворец народного творчества «Авангард»', 'link': 'https://www.afisha.ru/performance/cvety-dlya-eldzhernona-277604/'}, {'title': 'Ольга Малащенко', 'date': '18 мая в 19:00', 'category': 'Юмор', 'venue': 'ЦК ТГУ', 'link': 'https://www.afisha.ru/concert/olga-malashchenko-2269788/'}, {'title': 'Один на один: Пикник', 'date': '22 апреля в 19:00', 'category': 'Рок', 'venue': 'Томская филармония', 'link': 'https://www.afisha.ru/concert/odin-na-odin-piknik-2274850/'}, {'title': 'Дискотека «Все хиты»', 'date': '26 марта в 19:00', 'category': 'Поп', 'venue': 'Дворец зрелищ и спорта', 'link': 'https://www.afisha.ru/concert/diskoteka-vse-hity-2278557/'}, {'title': 'Перевоплотиться: Zoloto', 'date': '18 марта в 19:00', 'category': 'Поп', 'venue': 'Face Club', 'link': 'https://www.afisha.ru/concert/perevoplotitsya-zoloto-2279940/'}, {'title': 'Егор Крид', 'date': '16 апреля в 20:00', 'category': 'Поп', 'venue': 'Дворец зрелищ и спорта', 'link': 'https://www.afisha.ru/concert/egor-krid-2227432/'},
