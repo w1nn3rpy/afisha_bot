@@ -8,7 +8,7 @@ from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description
 from parse.ticketland.parse_events import get_all_events_ticketland
 from parse.afisharu.parse_events import get_all_events_afisharu
-from afisharu.parse_description_of_events import get_descriptions_parallel
+from parse.afisharu.parse_description_of_events import get_descriptions_parallel
 from parse.ticketland.parse_description_of_events import get_descriptions
 
 def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
