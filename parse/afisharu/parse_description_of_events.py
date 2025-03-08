@@ -32,24 +32,24 @@ def get_event_description(url: str) -> Dict[str, str]:
         except:
             pass  # Ошибки нет, продолжаем
 
-        if "formatted-text" in driver.page_source:
-            logger.info("✅ Элемент `formatted-text` найден в HTML!")
-        else:
-            logger.warning("❌ Элемент `formatted-text` отсутствует на странице!")
+        try:
+            description_block = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-test='OBJECT-DESCRIPTION-CONTENT']"))
+            )
 
-        description_block = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
-        )
+            soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
 
-        soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
-        first_paragraph = soup.find("p")
+            # Извлекаем описание из блока
+            first_paragraph = soup.find("div", class_="tlLlr")  # Основной контейнер текста
+            if first_paragraph:
+                description = first_paragraph.text.strip()
+                logger.info(f"✅ Описание найдено: {description}")
+            else:
+                logger.warning(f"❌ Описание не найдено в блоке! {url}")
 
-        if first_paragraph:
-            description = first_paragraph.text.strip()
-            logger.info(f"Описание: {description}")
+        except Exception as e:
+            logger.error(f"❌ Ошибка при обработке {url}: {e}")
 
-    except Exception as e:
-        logger.error(f"Ошибка при обработке {url}: {e}")
     finally:
         driver.quit()
     return {url: description}
