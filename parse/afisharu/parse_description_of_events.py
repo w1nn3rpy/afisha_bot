@@ -60,11 +60,16 @@ def get_event_description(url: str) -> Dict[str, str]:
     return {url: description}
 
 
-def get_descriptions_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
+def get_descriptions_parallel(process_id, urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     chunk_size = max(1, len(urls) // num_processes)  # Разбиваем список ссылок на части
+    url_chunks = [urls[i:i + chunk_size] for i in range(0, len(urls), chunk_size)]
+
+    logger.info(f"🔄 Запускаем {num_processes} процессов, каждая часть содержит {chunk_size} ссылок...")
+
+
     """Запускает сбор описаний в многопроцессорном режиме."""
     with multiprocessing.Pool(processes=num_processes) as pool:  # Используем 2 процесса
-        results = pool.map(get_event_description, [urls_str for urls_str in urls])
+        results = pool.starmap(get_event_description, [(i, chunk) for i, chunk in enumerate(url_chunks)])
 
     # Объединяем результаты всех процессов в один словарь
     merged_results = {}

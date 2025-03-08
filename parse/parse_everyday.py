@@ -1,6 +1,6 @@
 import asyncio
 import multiprocessing
-from typing import List, Dict
+from typing import List, Dict, Callable
 
 from asyncpg import Record
 
@@ -8,10 +8,10 @@ from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description
 from parse.ticketland.parse_events import get_all_events_ticketland
 from parse.afisharu.parse_events import get_all_events_afisharu
-from parse.afisharu.parse_description_of_events import get_descriptions_parallel
+from parse.afisharu.parse_description_of_events import get_descriptions_parallel, get_event_description
 from parse.ticketland.parse_description_of_events import get_descriptions
 
-def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
+def run_parallel(func: Callable, urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     """
     Запускает парсинг в несколько процессов и объединяет результаты.
     """
@@ -21,7 +21,7 @@ def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     logger.info(f"🔄 Запускаем {num_processes} процессов, каждая часть содержит {chunk_size} ссылок...")
 
     with multiprocessing.Pool(processes=num_processes) as pool:
-        results = pool.starmap(get_descriptions, [(i, chunk) for i, chunk in enumerate(url_chunks)])
+        results = pool.starmap(func, [(i, chunk) for i, chunk in enumerate(url_chunks)])
         # results = pool.map(get_descriptions, url_chunks)
 
     # Объединяем результаты всех процессов в один словарь
@@ -63,7 +63,7 @@ async def parse_everyday_afisharu():
 
     if list_of_links is not None:
         print('Запуск парсинга описаний в мультипроцессе')
-        description = get_descriptions_parallel(list_of_links)
+        description = run_parallel(get_event_description, list_of_links)
         print('Добавление описания в бд')
         await add_descriptions(description)
 
