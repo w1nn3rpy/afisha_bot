@@ -34,10 +34,10 @@ def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
 
 
 async def parse_everyday_ticketland():
-    # all_events_list_of_dicts = get_all_events_ticketland()
+    all_events_list_of_dicts = get_all_events_ticketland()
 
-    # if all_events_list_of_dicts is not None:
-    #     await add_events(all_events_list_of_dicts)
+    if all_events_list_of_dicts is not None:
+        await add_events(all_events_list_of_dicts)
 
     list_of_records = await get_events_without_description()
     list_of_links = [record['source'] for record in list_of_records]
