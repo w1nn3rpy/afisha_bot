@@ -48,13 +48,13 @@ async def parse_everyday_ticketland():
 
 async def parse_everyday_afisharu():
     print('Запуск parse_everyday_afisharu')
-
-    print('Получение всех мероприятий')
-    all_events_list_of_dicts = get_all_events_afisharu()
-    if all_events_list_of_dicts is not None:
-        print('if all_events_list_of_dicts is not none: >>>')
-        await add_events(all_events_list_of_dicts)
-        print('add_events done')
+    #
+    # print('Получение всех мероприятий')
+    # all_events_list_of_dicts = get_all_events_afisharu()
+    # if all_events_list_of_dicts is not None:
+    #     print('if all_events_list_of_dicts is not none: >>>')
+    #     await add_events(all_events_list_of_dicts)
+    #     print('add_events done')
 
     print('Проверка событий без описания')
     list_of_records = await get_events_without_description()
