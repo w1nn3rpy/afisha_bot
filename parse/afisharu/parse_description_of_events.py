@@ -21,9 +21,7 @@ def get_event_description(url: str) -> Dict[str, str]:
     try:
         logger.info(f"Открываем страницу: {url}")
         driver.get(url)
-        WebDriverWait(driver, 15).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
-        )
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         logger.info("Страница загружена!")
         print(driver.page_source[:2000])
 
@@ -35,13 +33,9 @@ def get_event_description(url: str) -> Dict[str, str]:
         except:
             pass  # Ошибки нет, продолжаем
 
-        try:
-            description_block = WebDriverWait(driver, 15).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
-            )
-        except:
-            logger.warning(f"Элемент не найден на странице {url}, описание отсутствует")
-            return {url: "Нет описания"}
+        description_block = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
+        )
 
         soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
         first_paragraph = soup.find("p")
