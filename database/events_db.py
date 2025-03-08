@@ -11,8 +11,8 @@ async def add_events(events:List[dict]):
         conn = await asyncpg.connect(DB_URL)
 
         query = '''
-        INSERT INTO temp_events_table (title, category, date, time, location, source)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO temp_events_table (title, category, date, location, source)
+        VALUES ($1, $2, $3, $4, $5)
         '''
 
         for event in events:
@@ -21,11 +21,10 @@ async def add_events(events:List[dict]):
                 title =  event.get('title')
                 category = event.get('category')
                 date = event.get('date')
-                time = event.get('time')
                 location = event.get('venue')
                 link = event.get('link')
 
-                await conn.execute(query, title, category, date, time, location, link)
+                await conn.execute(query, title, category, date, location, link)
 
             except Exception as e:
                 logger.error(f'Произошла ошибка в {__name__} при добавлении события: {event}\nОшибка: {e}')
