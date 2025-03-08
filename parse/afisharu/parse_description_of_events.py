@@ -23,7 +23,6 @@ def get_event_description(url: str) -> Dict[str, str]:
         driver.get(url)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         logger.info("Страница загружена!")
-        print(driver.page_source[:2000])
 
         try:
             error_element = driver.find_element(By.CSS_SELECTOR, "h1.error-page__title")
@@ -32,6 +31,11 @@ def get_event_description(url: str) -> Dict[str, str]:
                 return {url: description}
         except:
             pass  # Ошибки нет, продолжаем
+
+        if "formatted-text" in driver.page_source:
+            logger.info("✅ Элемент `formatted-text` найден в HTML!")
+        else:
+            logger.warning("❌ Элемент `formatted-text` отсутствует на странице!")
 
         description_block = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
