@@ -8,6 +8,7 @@ from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description
 from parse.ticketland.parse_events import get_all_events_ticketland
 from parse.afisharu.parse_events import get_all_events_afisharu
+from afisharu.parse_description_of_events import get_descriptions_parallel
 from parse.ticketland.parse_description_of_events import get_descriptions
 
 def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
@@ -34,7 +35,6 @@ def run_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
 
 async def parse_everyday_ticketland():
     # all_events_list_of_dicts = get_all_events_ticketland()
-    link_of_events = []
 
     # if all_events_list_of_dicts is not None:
     #     await add_events(all_events_list_of_dicts)
@@ -47,8 +47,25 @@ async def parse_everyday_ticketland():
         await add_descriptions(description)
 
 async def parse_everyday_afisharu():
+    print('Запуск parse_everyday_afisharu')
+
+    print('Получение всех мероприятий')
     all_events_list_of_dicts = get_all_events_afisharu()
-    print(all_events_list_of_dicts)
+    if all_events_list_of_dicts is not None:
+        print('if all_events_list_of_dicts is not none: >>>')
+        await add_events(all_events_list_of_dicts)
+        print('add_events done')
+
+    print('Проверка событий без описания')
+    list_of_records = await get_events_without_description()
+    print('нахождение ссылок')
+    list_of_links = [record['source'] for record in list_of_records]
+
+    if list_of_links is not None:
+        print('Запуск парсинга описаний в мультипроцессе')
+        description = get_descriptions_parallel(list_of_links)
+        print('Добавление описания в бд')
+        await add_descriptions(description)
 
 
 if __name__ == "__main__":

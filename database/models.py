@@ -23,6 +23,19 @@ async def create_table_if_not_exist():
             selected_category TEXT[] DEFAULT '{}'
             )''',
 
+            'temp_events_table': '''
+            CREATE TABLE events (
+            id SERIAL PRIMARY KEY,
+            title TEXT NOT NULL,
+            category VARCHAR(255) DEFAULT 'Категория не указана',
+            date VARCHAR(255) NOT NULL,
+            time VARCHAR(255) NOT NULL,
+            location TEXT,
+            description TEXT DEFAULT 'Нет описания',
+            source TEXT,
+            UNIQUE (title, date) -- Исключаем дубли по названию и дате
+            )''',
+
             'events': '''
             CREATE TABLE events (
             id SERIAL PRIMARY KEY,
