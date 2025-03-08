@@ -11,32 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from config import logger
-
-BASE_URL = "https://www.afisha.ru/tomsk/events/page{}/performances/exhibitions/concerts/"
-
-
-def init_driver():
-    """Инициализация Selenium WebDriver."""
-    CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
-    if not CHROME_PATH:
-        raise FileNotFoundError(
-            "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
-
-    CHROMEDRIVER_PATH = shutil.which("chromedriver")
-    if not CHROMEDRIVER_PATH:
-        raise FileNotFoundError("ChromeDriver не найден! Установите его.")
-
-    chrome_options = Options()
-    chrome_options.binary_location = CHROME_PATH
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-
-    service = Service(CHROMEDRIVER_PATH)
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    return driver
+from parse.afisharu.parse_events import init_driver
 
 
 def get_event_description(url: str) -> Dict[str, str]:

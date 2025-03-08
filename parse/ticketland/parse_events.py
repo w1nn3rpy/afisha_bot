@@ -111,6 +111,7 @@ def get_all_events_ticketland() -> List[dict] | None:
             page += 1
             time.sleep(2)
 
+        driver.quit()
         return events
 
     except Exception as e:

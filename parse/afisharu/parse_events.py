@@ -15,7 +15,8 @@ def init_driver():
     """Инициализация WebDriver с обработкой ошибок."""
     CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
     if not CHROME_PATH:
-        raise FileNotFoundError("Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
+        raise FileNotFoundError(
+            "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
 
     CHROMEDRIVER_PATH = shutil.which("chromedriver")
     if not CHROMEDRIVER_PATH:
@@ -28,13 +29,6 @@ def init_driver():
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--disable-features=VizDisplayCompositor")
-    chrome_options.add_argument("--disable-software-rasterizer")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-background-networking")
-    chrome_options.add_argument("--memory-pressure-off")
-    chrome_options.add_argument("--renderer-process-limit=2")  # Ограничение рендер-процессов
-    chrome_options.add_argument("--max-old-space-size=512")  # Ограничение памяти
 
     service = Service(CHROMEDRIVER_PATH)
     driver = webdriver.Chrome(service=service, options=chrome_options)
