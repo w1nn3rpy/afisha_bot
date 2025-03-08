@@ -3,9 +3,9 @@ services:
     image: postgres:latest
     container_name: postgres_bot_container
     environment:
-      POSTGRES_USER: admin # Установить username
-      POSTGRES_PASSWORD: admin # Установить пароль
-      POSTGRES_DB: bot_db
+      POSTGRES_USER: postgres # Установить username
+      POSTGRES_PASSWORD: PulseWithMe1337 # Установить пароль
+      POSTGRES_DB: bot_test_afisha_db
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"

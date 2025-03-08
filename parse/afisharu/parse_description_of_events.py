@@ -55,8 +55,7 @@ def get_descriptions_parallel(urls: List[str], num_processes: int = 2) -> Dict[s
     url_chunks = [urls[i:i + chunk_size] for i in range(0, len(urls), chunk_size)]
     """Запускает сбор описаний в многопроцессорном режиме."""
     with multiprocessing.Pool(processes=num_processes) as pool:  # Используем 2 процесса
-        results = pool.starmap(get_event_description, [(i, chunk) for i, chunk in enumerate(url_chunks)])
-    descriptions = {k: v for d in results for k, v in d.items()}
+        results = pool.map(get_event_description, [urls_str for urls_str in urls])
 
     # Объединяем результаты всех процессов в один словарь
     merged_results = {}
