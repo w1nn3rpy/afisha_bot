@@ -16,6 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from config import logger
 from database.events_db import delete_event_by_url
+from parse.parse_everyday import clean_up
 
 
 def log_memory_usage():
@@ -107,27 +108,31 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
 
                         # Ищем блок описания
                         description_block = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR,
-                                                            "div.formatted-text.mts-text, div#showDescription[itemprop='description']"))
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "div#showDescription[itemprop='description']"))
                         )
 
                         # Извлекаем HTML содержимое блока
                         soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
 
-                        # Находим первый абзац <p> внутри блока
-                        first_paragraph = soup.find("p")
+                        # Проверяем, содержит ли <div id="showDescription"> текст
+                        main_text = soup.text.strip()
 
-                        # Проверяем, что <p> найден и содержит текст
+                        # Если текст пустой, ищем первый вложенный блок
+                        if not main_text:
+                            nested_block = soup.find_next()
+                            main_text = nested_block.text.strip() if nested_block else ''
+
+                        # Если есть абзац <p>, но он пустой, то берём основной текст
+                        first_paragraph = soup.find("p")
                         if first_paragraph and first_paragraph.text.strip():
                             new_description = first_paragraph.text.strip()
-                            logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
-
                         else:
-                            new_description = soup.text.strip()
-                            logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
+                            new_description = main_text
 
-                            if len(new_description) > 5 and not new_description.endswith(':'):
+                            if len(new_description) > 5 and not new_description.endswith(':') and new_description != 'Показать ещё':
                                 descriptions[url] = new_description
+                                logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
+
                             else:
                                 logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов либо заканчивается на ':'. Установлено 'Нет описания'")
 
@@ -167,3 +172,4 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
         if 'driver' in locals():
             driver.quit()
             logger.info(f"[{process_id}] [INFO] Браузер закрыт!")
+        clean_up()
