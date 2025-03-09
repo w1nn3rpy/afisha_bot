@@ -1,4 +1,5 @@
 # https://www.afisha.ru/tomsk/events/performances/exhibitions/concerts/
+from datetime import datetime
 import re
 import time
 import shutil
@@ -10,6 +11,40 @@ from bs4 import BeautifulSoup
 from config import logger
 
 BASE_URL = "https://www.afisha.ru/tomsk/events/page{}/performances/exhibitions/concerts/"
+
+# Маппинг русских месяцев в числовой формат
+MONTHS = {
+    "января": "01", "февраля": "02", "марта": "03", "апреля": "04",
+    "мая": "05", "июня": "06", "июля": "07", "августа": "08",
+    "сентября": "09", "октября": "10", "ноября": "11", "декабря": "12"
+}
+
+
+def convert_date(date_str):
+    """ Приводит дату к формату 'DD.MM.YYYY' """
+    # Удаляем время (например, "в 19:00")
+    date_str = re.sub(r"\s+в\s+\d{1,2}:\d{2}", "", date_str)
+
+    # Убираем вторую дату, если есть (например, "28 и 29 марта" -> "28 марта")
+    date_str = re.sub(r"\s+и\s+\d+\s+\w+", "", date_str)
+
+    # Разбиваем строку на части
+    parts = date_str.split()
+    if len(parts) != 2:
+        return None  # Если что-то не так, пропускаем
+
+    day, month = parts
+    if month not in MONTHS:
+        return None  # Если месяц не распознан
+
+    # Определяем год (если дата уже прошла в этом году, берём следующий)
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    month_num = int(MONTHS[month])
+
+    year = current_year if month_num >= current_month else current_year + 1
+
+    return f"{int(day):02d}.{MONTHS[month]}.{year}"
 
 def init_driver():
     """Инициализация WebDriver с обработкой ошибок."""
@@ -77,7 +112,7 @@ def get_all_events_afisharu() -> List[dict] | None:
 
                     # Разделение даты и места проведения
                     date_venue_split = date_venue_text.split(", ")
-                    date = date_venue_split[0] if len(date_venue_split) > 0 else "Неизвестно"
+                    date = convert_date(date_venue_split[0]) if len(date_venue_split) > 0 else "Неизвестно"
                     print('date:', date)
                     venue = date_venue_split[1] if len(date_venue_split) > 1 else "Неизвестно"
 
