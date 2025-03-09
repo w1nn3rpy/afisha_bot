@@ -99,8 +99,7 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                             logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
                             asyncio.run(delete_event_by_url(url))
                             break  # Пропускаем обработку этой страницы
-                    except Exception as e:
-                        logger.debug(f'Ошибки нет, продолжаем. {e}')
+                    except:
                         pass  # Ошибки нет, продолжаем
 
                     try:
@@ -113,7 +112,7 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                             # Извлекаем HTML содержимое блока
                             soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
                         except Exception as e:
-                            logger.error(f"[{process_id}] [ERROR] Описание не найдено. {e}")
+                            logger.error(f"[{process_id}] [ERROR] Описание не найдено.")
                             break
 
                         # Проверяем, содержит ли <div id="showDescription"> текст
