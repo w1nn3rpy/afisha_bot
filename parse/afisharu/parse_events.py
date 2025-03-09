@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from config import logger
-from parse.common_funcs import find_nearest_date
+from parse.common_funcs import find_nearest_date, normalize_category
 
 BASE_URL = "https://www.afisha.ru/tomsk/events/page{}/performances/exhibitions/concerts/"
 
@@ -75,7 +75,7 @@ def get_all_events_afisharu() -> List[dict] | None:
 
                     title = title_tag.text.strip()
                     event_link = f"https://www.afisha.ru{title_tag['href']}"
-                    category = category_tag.text.strip() if category_tag else "Неизвестно"
+                    category = normalize_category(category_tag.text.strip()) if category_tag else "Неизвестно"
                     date_venue_text = date_venue_tag.text.strip()
 
                     # Разделение даты и места проведения
