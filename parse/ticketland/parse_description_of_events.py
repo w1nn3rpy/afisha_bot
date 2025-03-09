@@ -95,9 +95,11 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                         pass  # Ошибки нет, продолжаем
 
                     try:
+
                         # Ищем блок описания
                         description_block = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
+                            EC.presence_of_element_located((By.CSS_SELECTOR,
+                                                            "div.formatted-text.mts-text, div#showDescription[itemprop='description']"))
                         )
 
                         # Извлекаем HTML содержимое блока
@@ -107,13 +109,14 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                         first_paragraph = soup.find("p")
 
                         if first_paragraph:
-                            new_description = first_paragraph.text.strip()
+                            new_description = first_paragraph.text.strip() if first_paragraph else soup.text.strip()
+
                             logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
 
-                            if len(description) > 5:
+                            if len(description) > 5 and not description.endswith(':'):
                                 descriptions[url] = new_description
                             else:
-                                logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                                logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов либо заканчивается на ':'. Установлено 'Нет описания'")
 
                         break
 
