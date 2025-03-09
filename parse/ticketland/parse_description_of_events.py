@@ -5,8 +5,11 @@ import tempfile
 import time
 import traceback
 from typing import Dict, List
-import psutil
 
+import os
+import psutil
+import shutil
+import subprocess
 
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup
@@ -16,8 +19,33 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from config import logger
 from database.events_db import delete_event_by_url
-from parse.parse_everyday import clean_up
 
+
+def clean_up():
+    print("🔄 Очистка памяти и завершение процессов...")
+
+    # Закрываем Chrome и Chromedriver
+    subprocess.call("pkill -f chrome", shell=True)
+    subprocess.call("pkill -f chromedriver", shell=True)
+
+    # Очистка кеша
+    subprocess.call("sync; echo 3 > /proc/sys/vm/drop_caches", shell=True)
+
+    # Очистка временных файлов
+    tmp_dirs = ["/tmp", "/dev/shm"]
+    for d in tmp_dirs:
+        try:
+            shutil.rmtree(d, ignore_errors=True)
+        except Exception as e:
+            print(f"Ошибка при очистке {d}: {e}")
+
+    # Удаление зомби-процессов
+    for proc in psutil.process_iter():
+        try:
+            if proc.status() == psutil.STATUS_ZOMBIE:
+                proc.kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
 
 def log_memory_usage():
     mem = psutil.virtual_memory()

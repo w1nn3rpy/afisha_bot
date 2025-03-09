@@ -2,11 +2,6 @@ import asyncio
 import multiprocessing
 from typing import List, Dict, Callable
 
-import os
-import psutil
-import shutil
-import subprocess
-
 from asyncpg import Record
 
 from config import logger
@@ -67,31 +62,7 @@ async def parse_everyday_afisharu():
 
     await move_events_from_temp_to_release_table()
 
-def clean_up():
-    print("🔄 Очистка памяти и завершение процессов...")
 
-    # Закрываем Chrome и Chromedriver
-    subprocess.call("pkill -f chrome", shell=True)
-    subprocess.call("pkill -f chromedriver", shell=True)
-
-    # Очистка кеша
-    subprocess.call("sync; echo 3 > /proc/sys/vm/drop_caches", shell=True)
-
-    # Очистка временных файлов
-    tmp_dirs = ["/tmp", "/dev/shm"]
-    for d in tmp_dirs:
-        try:
-            shutil.rmtree(d, ignore_errors=True)
-        except Exception as e:
-            print(f"Ошибка при очистке {d}: {e}")
-
-    # Удаление зомби-процессов
-    for proc in psutil.process_iter():
-        try:
-            if proc.status() == psutil.STATUS_ZOMBIE:
-                proc.kill()
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
 
 
 if __name__ == "__main__":
