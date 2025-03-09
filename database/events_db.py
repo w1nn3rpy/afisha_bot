@@ -98,28 +98,43 @@ async def delete_event_by_url(url):
         if conn:
             await conn.close()
 
+
 async def move_events_from_temp_to_release_table():
-    """Перемещает события из временной таблицы в основную в транзакции."""
+    """Перемещает события из временной таблицы в основную и всегда очищает temp_events_table."""
+
     conn = None
     try:
         conn = await asyncpg.connect(DB_URL)
 
-        async with conn.transaction():  # Безопасная транзакция
-            await conn.execute('''
-                INSERT INTO events (title, category, date, location, description, link)
-                SELECT title, category, date, location, description, link
-                FROM temp_events_table;
-            ''')
+        # Получаем все данные из временной таблицы
+        rows = await conn.fetch('SELECT * FROM temp_events_table')
 
-            await conn.execute('''
-                DELETE FROM temp_events_table;
-            ''')
+        if not rows:
+            logger.info("ℹ️ Временная таблица пуста, перемещение не требуется.")
+            return
 
-        logger.info("✅ Данные успешно перемещены из temp_events_table в events")
+        # Перебираем строки и перемещаем по одной
+        for row in rows:
+            try:
+                await conn.execute('''
+                    INSERT INTO events (title, category, date, location, description, link)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                ''', row['title'], row['category'], row['date'], row['location'], row['description'], row['link'])
+
+                logger.info(f"✅ Успешно перемещена запись: {row['title']} {row['date']}")
+
+            except Exception as row_error:
+                logger.error(f"⚠️ Ошибка при перемещении {row['title']} {row['date']}: {row_error}")
+                continue  # Пропускаем ошибочную строку
 
     except Exception as e:
-        logger.error(f'❌ Ошибка в move_events_from_temp_to_release_table: {e}')
+        logger.error(f'❌ Общая ошибка в move_events_from_temp_to_release_table: {e}')
 
     finally:
         if conn:
+            try:
+                await conn.execute('DELETE FROM temp_events_table')  # Очистка таблицы в любом случае
+                logger.info("🗑 Временная таблица очищена.")
+            except Exception as cleanup_error:
+                logger.error(f"❌ Ошибка при очистке temp_events_table: {cleanup_error}")
             await conn.close()

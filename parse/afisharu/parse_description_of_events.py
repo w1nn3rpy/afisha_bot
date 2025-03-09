@@ -32,10 +32,10 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
 
             while attempts < max_attempts:
 
-                logger.info(f"[{process_id}] [INFO] ℹ️ {current_count}/{all_count} Открываем страницу: {url}")
+                logger.info(f"[{process_id}] [INFO] ℹ️  {current_count}/{all_count} Открываем страницу: {url}")
                 driver.get(url)
                 WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-                logger.info(f"[{process_id}] [INFO] ℹ️ Страница загружена!")
+                logger.info(f"[{process_id}] [INFO] ℹ️  Страница загружена!")
 
                 try:
                     error_element = driver.find_element(By.CSS_SELECTOR, "h1.error-page__title")
@@ -63,7 +63,7 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
                         if len(description) > 5:
                             descriptions[url] = new_description
                         else:
-                            logger.info(f"[{process_id}] [INFO] ℹ️ Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                            logger.info(f"[{process_id}] [INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
                     break
 
@@ -79,12 +79,12 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
                     driver.quit()
                     time.sleep(5)
                     driver = init_driver()
-                    logger.info(f'[{process_id}] [INFO] ℹ️ Браузер перезапущен')
+                    logger.info(f'[{process_id}] [INFO] ℹ️  Браузер перезапущен')
                     time.sleep(5)
 
             time.sleep(random.uniform(0.5, 2))  # Задержка для избежания бана
             current_count += 1
-        logger.info(f'[{process_id}] [INFO] ℹ️ Возвращение значений descriptions')
+        logger.info(f'[{process_id}] [INFO] ℹ️  Возвращение значений descriptions')
         return descriptions
 
     except Exception as e:
@@ -96,4 +96,4 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
 
         if 'driver' in locals():
             driver.quit()
-            logger.info(f"[{process_id}] [INFO] ℹ️ Браузер закрыт!")
+            logger.info(f"[{process_id}] [INFO] ℹ️  Браузер закрыт!")
