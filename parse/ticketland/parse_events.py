@@ -90,9 +90,8 @@ def get_all_events_ticketland() -> List[dict] | None:
             for event in soup.find_all("div", class_="card-search"):
                 title_tag = event.find("a", class_="card-search__name")
                 date_tag = event.find("a", class_="text-uppercase")
-                category_tag = event.find("p", class_="card-search__category d-none d-lg-block")  # Тип мероприятия
-                venue_tag = event.find("a",
-                                       class_="card-search__building text-anchor text-truncate")  # Место проведения
+                category_tag = event.select_one("p[class^='card-search__category']")
+                venue_tag = event.find("a", attrs={"data-click-target": "ploshadka"})  # Место проведения
 
                 if title_tag and date_tag:
                     title = title_tag.text.strip()
@@ -105,7 +104,7 @@ def get_all_events_ticketland() -> List[dict] | None:
                     date = clean_date(raw_date)  # Преобразуем дату и время
 
                     category = category_tag.text.strip() if category_tag else "Неизвестно"  # Тип мероприятия
-                    venue = venue_tag.text.strip() if venue_tag else "Неизвестно"  # Место проведения
+                    venue = venue_tag["title"].strip() if venue_tag else "Неизвестно"
 
                     event_data = {
                         "title": title,
