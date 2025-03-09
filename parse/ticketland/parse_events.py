@@ -45,7 +45,7 @@ def clean_date(date_text):
 
     if match:
         date_part = match.group(1)  # "10 окт"
-        date_part = date_part.split()[0] + months_dict.get(date_part.split()[1])
+        date_part = date_part.split()[0] + ' ' + months_dict.get(date_part.split()[1])
         return date_part
     return "Неизвестно"
 

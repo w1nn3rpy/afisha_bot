@@ -40,7 +40,7 @@ async def parse_everyday_ticketland():
         await add_events(all_events_list_of_dicts)
 
     list_of_records = await get_events_without_description()
-    list_of_links = [record['source'] for record in list_of_records]
+    list_of_links = [record['link'] for record in list_of_records]
 
     if list_of_links is not None:
         description = run_parallel(get_event_descriptions_ticketland, list_of_links)
@@ -54,7 +54,7 @@ async def parse_everyday_afisharu():
         await add_events(all_events_list_of_dicts)
 
     list_of_records = await get_events_without_description()
-    list_of_links = [record['source'] for record in list_of_records]
+    list_of_links = [record['link'] for record in list_of_records]
 
     if list_of_links is not None:
         description = run_parallel(get_event_description_afisharu, list_of_links)
