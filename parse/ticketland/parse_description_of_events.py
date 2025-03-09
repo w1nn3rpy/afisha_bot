@@ -22,7 +22,7 @@ from database.events_db import delete_event_by_url
 
 
 def clean_up():
-    print("🔄 Очистка памяти и завершение процессов...")
+    logger.info("🔄 Очистка памяти и завершение процессов...")
 
     # Закрываем Chrome и Chromedriver
     subprocess.call("pkill -f chrome", shell=True)
@@ -37,7 +37,7 @@ def clean_up():
         try:
             shutil.rmtree(d, ignore_errors=True)
         except Exception as e:
-            print(f"Ошибка при очистке {d}: {e}")
+            logger.error(f"Ошибка при очистке {d}: {e}")
 
     # Удаление зомби-процессов
     for proc in psutil.process_iter():
@@ -46,6 +46,8 @@ def clean_up():
                 proc.kill()
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
+
+    logger.info('✅ Память успешно очищена')
 
 def log_memory_usage():
     mem = psutil.virtual_memory()
@@ -129,29 +131,37 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                             logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
                             asyncio.run(delete_event_by_url(url))
                             break  # Пропускаем обработку этой страницы
-                    except:
+                    except Exception as e:
+                        logger.debug(f'Ошибки нет, продолжаем. {e}')
                         pass  # Ошибки нет, продолжаем
 
                     try:
+                        try:
+                            # Ищем блок описания
+                            description_block = WebDriverWait(driver, 10).until(
+                                EC.presence_of_element_located((By.CSS_SELECTOR, "div#showDescription[itemprop='description']"))
+                            )
 
-                        # Ищем блок описания
-                        description_block = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, "div#showDescription[itemprop='description']"))
-                        )
-
-                        # Извлекаем HTML содержимое блока
-                        soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
+                            # Извлекаем HTML содержимое блока
+                            soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
+                        except Exception as e:
+                            logger.error(f"[{process_id}] [ERROR] Описание не найдено. {e}")
+                            break
 
                         # Проверяем, содержит ли <div id="showDescription"> текст
                         main_text = soup.text.strip()
+                        logger.debug(f'main_text: {main_text}')
 
                         # Если текст пустой, ищем первый вложенный блок
                         if not main_text:
+                            logger.debug('not main_text')
                             nested_block = soup.find_next()
                             main_text = nested_block.text.strip() if nested_block else ''
+                            logger.debug(f'next main_text: {main_text}')
 
                         # Если есть абзац <p>, но он пустой, то берём основной текст
                         first_paragraph = soup.find("p")
+                        logger.debug(f'first paragraph: {first_paragraph}')
                         if first_paragraph and first_paragraph.text.strip():
                             new_description = first_paragraph.text.strip()
                         else:
