@@ -96,6 +96,14 @@ def clean_up():
 
     logger.info('✅ Память успешно очищена')
 
+    # Создание папки /tmp, если её нет
+    os.makedirs("/tmp", exist_ok=True)
+
+    # Установка прав 1777 (drwxrwxrwt — чтение, запись и выполнение для всех, но удаление только владельцем)
+    os.chmod("/tmp", 0o1777)
+
+    logger.info("Папка /tmp создана и права установлены на 1777.")
+
 
 if __name__ == "__main__":
     asyncio.run(parse_everyday_afisharu())
