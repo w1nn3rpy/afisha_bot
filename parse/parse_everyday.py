@@ -4,6 +4,11 @@ from typing import List, Dict, Callable
 
 from asyncpg import Record
 
+import os
+import psutil
+import shutil
+import subprocess
+
 from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description, \
     move_events_from_temp_to_release_table
@@ -45,6 +50,8 @@ async def parse_everyday_ticketland():
         description = run_parallel(get_event_descriptions_ticketland, list_of_links)
         await add_descriptions(description)
 
+    await asyncio.to_thread(clean_up)
+
     await move_events_from_temp_to_release_table()
 
 async def parse_everyday_afisharu():
@@ -61,7 +68,33 @@ async def parse_everyday_afisharu():
 
     await move_events_from_temp_to_release_table()
 
+def clean_up():
+    logger.info("🔄 Очистка памяти и завершение процессов...")
 
+    # Закрываем Chrome и Chromedriver
+    subprocess.call("pkill -f chrome", shell=True)
+    subprocess.call("pkill -f chromedriver", shell=True)
+
+    # Очистка кеша
+    subprocess.call("sync; echo 3 > /proc/sys/vm/drop_caches", shell=True)
+
+    # Очистка временных файлов
+    tmp_dirs = ["/tmp", "/dev/shm"]
+    for d in tmp_dirs:
+        try:
+            shutil.rmtree(d, ignore_errors=True)
+        except Exception as e:
+            logger.error(f"Ошибка при очистке {d}: {e}")
+
+    # Удаление зомби-процессов
+    for proc in psutil.process_iter():
+        try:
+            if proc.status() == psutil.STATUS_ZOMBIE:
+                proc.kill()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+    logger.info('✅ Память успешно очищена')
 
 
 if __name__ == "__main__":

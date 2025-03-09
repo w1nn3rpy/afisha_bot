@@ -6,11 +6,7 @@ import time
 import traceback
 from typing import Dict, List
 
-import os
 import psutil
-import shutil
-import subprocess
-
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
@@ -20,34 +16,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from config import logger
 from database.events_db import delete_event_by_url
 
-
-def clean_up():
-    logger.info("🔄 Очистка памяти и завершение процессов...")
-
-    # Закрываем Chrome и Chromedriver
-    subprocess.call("pkill -f chrome", shell=True)
-    subprocess.call("pkill -f chromedriver", shell=True)
-
-    # Очистка кеша
-    subprocess.call("sync; echo 3 > /proc/sys/vm/drop_caches", shell=True)
-
-    # Очистка временных файлов
-    tmp_dirs = ["/tmp", "/dev/shm"]
-    for d in tmp_dirs:
-        try:
-            shutil.rmtree(d, ignore_errors=True)
-        except Exception as e:
-            logger.error(f"Ошибка при очистке {d}: {e}")
-
-    # Удаление зомби-процессов
-    for proc in psutil.process_iter():
-        try:
-            if proc.status() == psutil.STATUS_ZOMBIE:
-                proc.kill()
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-
-    logger.info('✅ Память успешно очищена')
 
 def log_memory_usage():
     mem = psutil.virtual_memory()
@@ -210,4 +178,3 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
         if 'driver' in locals():
             driver.quit()
             logger.info(f"[{process_id}] [INFO] Браузер закрыт!")
-        clean_up()
