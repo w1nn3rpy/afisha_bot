@@ -54,7 +54,7 @@ def init_driver(process_id):
 
     return driver
 
-def get_descriptions(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
+def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
 
     descriptions = {url: 'Нет описания' for url in list_of_links}
 

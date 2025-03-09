@@ -26,11 +26,15 @@ def clean_date(date_text):
     """
     Очищает дату от лишних символов и приводит к формату: '10 окт' и '20:00'
     """
+
+    months_dict = {''}
+
     date_text = date_text.replace("\xa0", " ")  # Убираем неразрывные пробелы
     match = re.search(r"(\d{1,2} \w+)•\w+•(\d{2}:\d{2})", date_text)
 
     if match:
         date_part = match.group(1)  # "10 окт"
+        date_part = date_part.split()[1]
         time_part = match.group(2)  # "20:00"
         return date_part, time_part
     return "Неизвестно", "Неизвестно"

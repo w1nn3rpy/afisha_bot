@@ -1,14 +1,8 @@
 import asyncio
 import random
-import re
 import time
-import shutil
-import multiprocessing
 import traceback
 from typing import List, Dict
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -18,7 +12,7 @@ from database.events_db import delete_event_by_url
 from parse.afisharu.parse_events import init_driver
 
 
-def get_event_description(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
+def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
     """Получает описание мероприятия по ссылке."""
 
     descriptions = {url: 'Нет описания' for url in list_of_links}
@@ -100,24 +94,3 @@ def get_event_description(process_id, list_of_links: List[str]) -> Dict[str, str
         if 'driver' in locals():
             driver.quit()
             logger.info(f"[{process_id}] [INFO] Браузер закрыт!")
-
-
-def get_descriptions_parallel(urls: List[str], num_processes: int = 2) -> Dict[str, str]:
-    chunk_size = max(1, len(urls) // num_processes)  # Разбиваем список ссылок на части
-    url_chunks = [urls[i:i + chunk_size] for i in range(0, len(urls), chunk_size)]
-
-    logger.info(f"🔄 Запускаем {num_processes} процессов, каждая часть содержит {chunk_size} ссылок...")
-
-
-    """Запускает сбор описаний в многопроцессорном режиме."""
-    with multiprocessing.Pool(processes=num_processes) as pool:  # Используем 2 процесса
-        results = pool.starmap(get_event_description, [(i, chunk) for i, chunk in enumerate(url_chunks)])
-
-    # Объединяем результаты всех процессов в один словарь
-    merged_results = {}
-    for result in results:
-        if result:
-            merged_results.update(result)
-
-    return merged_results
-

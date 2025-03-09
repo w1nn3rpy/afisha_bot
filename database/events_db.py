@@ -97,3 +97,29 @@ async def delete_event_by_url(url):
     finally:
         if conn:
             await conn.close()
+
+async def move_events_from_temp_to_release_table():
+    """Перемещает события из временной таблицы в основную в транзакции."""
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+
+        async with conn.transaction():  # Безопасная транзакция
+            await conn.execute('''
+                INSERT INTO events (title, category, date, location, description, source)
+                SELECT title, category, date, location, description, source
+                FROM temp_events_table;
+            ''')
+
+            await conn.execute('''
+                DELETE FROM temp_events_table;
+            ''')
+
+        logger.info("✅ Данные успешно перемещены из temp_events_table в events")
+
+    except Exception as e:
+        logger.error(f'❌ Ошибка в move_events_from_temp_to_release_table: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
