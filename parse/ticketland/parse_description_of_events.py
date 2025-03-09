@@ -111,9 +111,10 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                         # Проверяем, что <p> найден и содержит текст
                         if first_paragraph and first_paragraph.text.strip():
                             new_description = first_paragraph.text.strip()
+                            logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
+
                         else:
                             new_description = soup.text.strip()
-
                             logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
 
                             if len(new_description) > 5 and not new_description.endswith(':'):
