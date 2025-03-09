@@ -20,31 +20,49 @@ MONTHS = {
 }
 
 
-def convert_date(date_str):
-    """ Приводит дату к формату 'DD.MM.YYYY' """
+def find_nearest_date(date_str: str) -> str | None:
+    """ Преобразует строку с датой в формат 'DD.MM.YYYY', выбирая ближайшую из списка """
+
     # Удаляем время (например, "в 19:00")
     date_str = re.sub(r"\s+в\s+\d{1,2}:\d{2}", "", date_str)
 
-    # Убираем вторую дату, если есть (например, "28 и 29 марта" -> "28 марта")
-    date_str = re.sub(r"\s+и\s+\d+\s+\w+", "", date_str)
+    # Убираем "и" и разделяем числа (например, "12, 19 и 26 марта" → ["12", "19", "26"])
+    date_str = date_str.replace(" и ", ", ")
 
     # Разбиваем строку на части
     parts = date_str.split()
-    if len(parts) != 2:
-        return None  # Если что-то не так, пропускаем
+    if len(parts) < 2:
+        return None  # Если формат неверный
 
-    day, month = parts
+    *days, month = parts  # Последнее слово — это месяц, остальные элементы — числа
+
     if month not in MONTHS:
-        return None  # Если месяц не распознан
+        return None  # Если месяц не найден в списке
 
-    # Определяем год (если дата уже прошла в этом году, берём следующий)
-    current_year = datetime.now().year
-    current_month = datetime.now().month
+    current_date = datetime.now()
+    current_year = current_date.year
+    current_month = current_date.month
     month_num = int(MONTHS[month])
 
+    # Определяем год (если месяц уже прошел в этом году, берем следующий год)
     year = current_year if month_num >= current_month else current_year + 1
 
-    return f"{int(day):02d}.{MONTHS[month]}.{year}"
+    # Ищем ближайшую подходящую дату
+    valid_dates = []
+    for day in days:
+        try:
+            event_date = datetime.strptime(f"{int(day):02d}.{month_num:02d}.{year}", "%d.%m.%Y")
+            if event_date >= current_date:
+                valid_dates.append(event_date)
+        except ValueError:
+            continue
+
+    if not valid_dates:
+        return None  # Если нет будущих дат, возвращаем None
+
+    nearest_date = min(valid_dates)  # Выбираем ближайшую дату
+
+    return nearest_date.strftime("%d.%m.%Y")
 
 def init_driver():
     """Инициализация WebDriver с обработкой ошибок."""
@@ -112,7 +130,7 @@ def get_all_events_afisharu() -> List[dict] | None:
 
                     # Разделение даты и места проведения
                     date_venue_split = date_venue_text.split(", ")
-                    date = convert_date(date_venue_split[0]) if len(date_venue_split) > 0 else "Неизвестно"
+                    date = find_nearest_date(date_venue_split[0])
                     print('date:', date)
                     venue = date_venue_split[1] if len(date_venue_split) > 1 else "Неизвестно"
 
@@ -123,7 +141,8 @@ def get_all_events_afisharu() -> List[dict] | None:
                         "venue": venue,
                         "link": event_link,
                     }
-                    page_events.append(event_data)
+                    if date and title and category and venue and event_link:
+                        page_events.append(event_data)
 
                 events.extend(page_events)
                 page += 1
