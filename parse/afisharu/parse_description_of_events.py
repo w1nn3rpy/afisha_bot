@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from config import logger
 from database.events_db import delete_event_by_url
 from parse.afisharu.parse_events import init_driver
+from parse.common_funcs import log_memory_usage
 
 
 def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
@@ -24,15 +25,17 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
     driver = init_driver()
     try:
         for url, description in descriptions.items():
+            log_memory_usage()
+
             attempts = 0
             max_attempts = 5
 
             while attempts < max_attempts:
 
-                logger.info(f"[{process_id}] [INFO] {current_count}/{all_count} Открываем страницу: {url}")
+                logger.info(f"[{process_id}] [INFO] ℹ️ {current_count}/{all_count} Открываем страницу: {url}")
                 driver.get(url)
                 WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-                logger.info(f"[{process_id}] [INFO] Страница загружена!")
+                logger.info(f"[{process_id}] [INFO] ℹ️ Страница загружена!")
 
                 try:
                     error_element = driver.find_element(By.CSS_SELECTOR, "h1.error-page__title")
@@ -55,37 +58,37 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
 
                     if first_paragraph:
                         new_description = first_paragraph.text.strip()
-                        logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
+                        logger.info(f"[{process_id}] [INFO] ✅ Описание: {new_description}")
 
                         if len(description) > 5:
                             descriptions[url] = new_description
                         else:
-                            logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                            logger.info(f"[{process_id}] [INFO] ℹ️ Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
                     break
 
                 except Exception as e:
                     attempts += 1
-                    logger.error(f"[{process_id}] [ERROR {attempts}/{max_attempts}] Ошибка при обработке {url}: {e}")
+                    logger.error(f"[{process_id}] [ERROR {attempts}/{max_attempts}] ❌ Ошибка при обработке {url}: {e}")
 
                     if attempts > 3:
                         asyncio.run(delete_event_by_url(url))
-                        logger.warning(f"[{process_id}] [WARNING] Страница {url} не загрузилась! Удаляем из базы.")
+                        logger.warning(f"[{process_id}] [WARNING] ⚠️ Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
                     driver.quit()
                     time.sleep(5)
                     driver = init_driver()
-                    logger.info(f'[{process_id}] [INFO] Браузер перезапущен')
+                    logger.info(f'[{process_id}] [INFO] ℹ️ Браузер перезапущен')
                     time.sleep(5)
 
             time.sleep(random.uniform(0.5, 2))  # Задержка для избежания бана
             current_count += 1
-        logger.info(f'[{process_id}] [INFO] возвращение значений descriptions')
+        logger.info(f'[{process_id}] [INFO] ℹ️ Возвращение значений descriptions')
         return descriptions
 
     except Exception as e:
-        logger.error(f"[{process_id}] [ERROR] Произошла ошибка:")
+        logger.error(f"[{process_id}] [ERROR] ❌ Произошла ошибка:")
         logger.error(traceback.format_exc())
         return descriptions
 
@@ -93,4 +96,4 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
 
         if 'driver' in locals():
             driver.quit()
-            logger.info(f"[{process_id}] [INFO] Браузер закрыт!")
+            logger.info(f"[{process_id}] [INFO] ℹ️ Браузер закрыт!")
