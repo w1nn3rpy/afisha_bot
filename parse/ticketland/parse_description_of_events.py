@@ -5,6 +5,8 @@ import tempfile
 import time
 import traceback
 from typing import Dict, List
+import psutil
+
 
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup
@@ -15,6 +17,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from config import logger
 from database.events_db import delete_event_by_url
 
+
+def log_memory_usage():
+    mem = psutil.virtual_memory()
+    logger.info(f"📊 Память перед запуском Chrome: {mem.available / (1024 * 1024)} MB свободно")
 
 def init_driver(process_id):
     # Уникальный профиль для каждого процесса
@@ -67,9 +73,12 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
     os.environ["DISPLAY"] = f":{display_num}"
 
     try:
+
         logger.info(f"[{process_id}] [INFO] Запускаем браузер...")
         driver = init_driver(process_id)
         for url, description in descriptions.items():
+
+            log_memory_usage()
             attempts = 0
             max_attempts = 5
 
