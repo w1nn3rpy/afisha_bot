@@ -78,6 +78,7 @@ def get_all_events_afisharu() -> List[dict] | None:
                     # Разделение даты и места проведения
                     date_venue_split = date_venue_text.split(", ")
                     date = date_venue_split[0] if len(date_venue_split) > 0 else "Неизвестно"
+                    print('date:', date)
                     venue = date_venue_split[1] if len(date_venue_split) > 1 else "Неизвестно"
 
                     event_data = {

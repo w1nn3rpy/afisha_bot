@@ -66,6 +66,8 @@ async def parse_everyday_afisharu():
         description = run_parallel(get_event_description_afisharu, list_of_links)
         await add_descriptions(description)
 
+    await asyncio.to_thread(clean_up)
+
     await move_events_from_temp_to_release_table()
 
 def clean_up():
