@@ -11,7 +11,7 @@ async def add_events(events:List[dict]):
         conn = await asyncpg.connect(DB_URL)
 
         query = '''
-        INSERT INTO temp_events_table (title, category, date, location, source)
+        INSERT INTO temp_events_table (title, category, date, location, link)
         VALUES ($1, $2, $3, $4, $5)
         '''
 
@@ -45,7 +45,7 @@ async def add_descriptions(descriptions:dict):
         query = '''
         UPDATE temp_events_table
         SET description = $2 
-        WHERE source = $1'''
+        WHERE link = $1'''
 
         for url, description in descriptions.items():
             try:
@@ -67,7 +67,7 @@ async def get_events_without_description():
     try:
         conn = await asyncpg.connect(DB_URL)
         query = """
-        SELECT source FROM temp_events_table
+        SELECT link FROM temp_events_table
         WHERE description = 'Нет описания'
         """
         rows = await conn.fetch(query)
@@ -87,7 +87,7 @@ async def delete_event_by_url(url):
         conn = await asyncpg.connect(DB_URL)
         query = '''
         DELETE FROM temp_events_table
-        WHERE source = $1'''
+        WHERE link = $1'''
 
         await conn.execute(query, url)
 
@@ -106,8 +106,8 @@ async def move_events_from_temp_to_release_table():
 
         async with conn.transaction():  # Безопасная транзакция
             await conn.execute('''
-                INSERT INTO events (title, category, date, location, description, source)
-                SELECT title, category, date, location, description, source
+                INSERT INTO events (title, category, date, location, description, link)
+                SELECT title, category, date, location, description, link
                 FROM temp_events_table;
             ''')
 

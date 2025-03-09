@@ -29,10 +29,9 @@ async def create_table_if_not_exist():
             title TEXT NOT NULL,
             category VARCHAR(255) DEFAULT 'Категория не указана',
             date VARCHAR(255),
-            time VARCHAR(255),
             location TEXT,
             description TEXT DEFAULT 'Нет описания',
-            source TEXT,
+            link TEXT,
             UNIQUE (title, date) -- Исключаем дубли по названию и дате
             )''',
 
@@ -42,10 +41,9 @@ async def create_table_if_not_exist():
             title TEXT NOT NULL,
             category VARCHAR(255) DEFAULT 'Категория не указана',
             date VARCHAR(255) NOT NULL,
-            time VARCHAR(255) NOT NULL,
             location TEXT,
             description TEXT DEFAULT 'Нет описания',
-            source TEXT,
+            link TEXT,
             UNIQUE (title, date) -- Исключаем дубли по названию и дате
             )''',
 

@@ -27,17 +27,27 @@ def clean_date(date_text):
     Очищает дату от лишних символов и приводит к формату: '10 окт' и '20:00'
     """
 
-    months_dict = {''}
+    months_dict = {'янв': 'января',
+                   'фев': 'февраля',
+                   'мар': 'марта',
+                   'апр': 'апреля',
+                   'мая': 'мая',
+                   'июн': 'июня',
+                   'июл': 'июля',
+                   'авг': 'августа',
+                   'сен': 'сентября',
+                   'окт': 'октября',
+                   'ноя': 'ноября',
+                   'дек': 'декабря'}
 
     date_text = date_text.replace("\xa0", " ")  # Убираем неразрывные пробелы
     match = re.search(r"(\d{1,2} \w+)•\w+•(\d{2}:\d{2})", date_text)
 
     if match:
         date_part = match.group(1)  # "10 окт"
-        date_part = date_part.split()[1]
-        time_part = match.group(2)  # "20:00"
-        return date_part, time_part
-    return "Неизвестно", "Неизвестно"
+        date_part = date_part.split()[0] + months_dict.get(date_part.split()[1])
+        return date_part
+    return "Неизвестно"
 
 
 def get_all_events_ticketland() -> List[dict] | None:
@@ -92,7 +102,7 @@ def get_all_events_ticketland() -> List[dict] | None:
                         span.decompose()
 
                     raw_date = date_tag.text.strip()
-                    date, time_ = clean_date(raw_date)  # Преобразуем дату и время
+                    date = clean_date(raw_date)  # Преобразуем дату и время
 
                     category = category_tag.text.strip() if category_tag else "Неизвестно"  # Тип мероприятия
                     venue = venue_tag.text.strip() if venue_tag else "Неизвестно"  # Место проведения
@@ -100,7 +110,6 @@ def get_all_events_ticketland() -> List[dict] | None:
                     event_data = {
                         "title": title,
                         "date": date,
-                        "time": time_,
                         "category": category,
                         "venue": venue,  # Добавлено место проведения
                         "link": event_link,

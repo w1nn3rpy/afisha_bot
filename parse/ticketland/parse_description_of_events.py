@@ -94,27 +94,33 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                     except:
                         pass  # Ошибки нет, продолжаем
 
-                    # Ищем блок описания
-                    description_block = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
-                    )
+                    try:
+                        # Ищем блок описания
+                        description_block = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "div.formatted-text.mts-text"))
+                        )
 
-                    # Извлекаем HTML содержимое блока
-                    soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
+                        # Извлекаем HTML содержимое блока
+                        soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
 
-                    # Находим первый абзац <p> внутри блока
-                    first_paragraph = soup.find("p")
+                        # Находим первый абзац <p> внутри блока
+                        first_paragraph = soup.find("p")
 
-                    if first_paragraph:
-                        new_description = first_paragraph.text.strip()
-                        logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
+                        if first_paragraph:
+                            new_description = first_paragraph.text.strip()
+                            logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
 
-                        if len(description) > 5:
-                            descriptions[url] = new_description
-                        else:
-                            logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                            if len(description) > 5:
+                                descriptions[url] = new_description
+                            else:
+                                logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
-                    break
+                        break
+
+                    except Exception as e:
+                        logger.error(f"[{process_id}] [ERROR] На странице {url} нет блока описания! Удаляем из базы.")
+                        asyncio.run(delete_event_by_url(url))
+                        break
 
                 except Exception as e:
                     attempts += 1
