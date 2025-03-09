@@ -103,7 +103,7 @@ def get_all_events_ticketland() -> List[dict] | None:
                     raw_date = date_tag.text.strip()
                     date = clean_date(raw_date)  # Преобразуем дату и время
 
-                    category = category_tag.text.strip() if category_tag and len(category_tag) > 2 else "Неизвестно"  # Тип мероприятия с валидацией от пустого значения
+                    category = category_tag.text.strip() if category_tag and len(category_tag.text.strip()) > 2 else "Неизвестно"  # Тип мероприятия с валидацией от пустого значения
                     venue = venue_tag["title"].strip() if venue_tag else "Неизвестно"
 
                     event_data = {

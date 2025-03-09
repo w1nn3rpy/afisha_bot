@@ -108,12 +108,15 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                         # Находим первый абзац <p> внутри блока
                         first_paragraph = soup.find("p")
 
-                        if first_paragraph:
-                            new_description = first_paragraph.text.strip() if first_paragraph else soup.text.strip()
+                        # Проверяем, что <p> найден и содержит текст
+                        if first_paragraph and first_paragraph.text.strip():
+                            new_description = first_paragraph.text.strip()
+                        else:
+                            new_description = soup.text.strip()
 
                             logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
 
-                            if len(description) > 5 and not description.endswith(':'):
+                            if len(new_description) > 5 and not new_description.endswith(':'):
                                 descriptions[url] = new_description
                             else:
                                 logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов либо заканчивается на ':'. Установлено 'Нет описания'")
