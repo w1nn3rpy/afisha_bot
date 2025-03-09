@@ -17,7 +17,7 @@ from parse.afisharu.parse_events import get_all_events_afisharu
 from parse.afisharu.parse_description_of_events import get_event_description_afisharu
 from parse.ticketland.parse_description_of_events import get_event_descriptions_ticketland
 
-def run_parallel(func: Callable, urls: List[str], num_processes: int = 3) -> Dict[str, str]:
+def run_parallel(func: Callable, urls: List[str], num_processes: int = 2) -> Dict[str, str]:
     """
     Запускает парсинг в несколько процессов и объединяет результаты.
     """
