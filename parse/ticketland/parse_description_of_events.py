@@ -157,12 +157,12 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                         else:
                             new_description = main_text
 
-                            if len(new_description) > 5 and not new_description.endswith(':') and new_description != 'Показать ещё':
-                                descriptions[url] = new_description
-                                logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
+                        if len(new_description) > 5 and not new_description.endswith(':') and new_description != 'Показать ещё':
+                            descriptions[url] = new_description
+                            logger.info(f"[{process_id}] [INFO] Описание: {new_description}")
 
-                            else:
-                                logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов либо заканчивается на ':'. Установлено 'Нет описания'")
+                        else:
+                            logger.info(f"[{process_id}] [INFO] Обнаруженное описание менее 5 символов либо заканчивается на ':'. Установлено 'Нет описания'")
 
                         break
 
