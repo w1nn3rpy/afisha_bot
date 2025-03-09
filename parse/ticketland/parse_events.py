@@ -17,37 +17,9 @@ import time
 import shutil
 
 from config import logger
+from parse.common_funcs import clean_date, normalize_category
 
 BASE_URL = "https://tomsk.ticketland.ru/search/performance/"
-
-
-
-def clean_date(date_text):
-    """
-    Очищает дату от лишних символов и приводит к формату: '10 окт' и '20:00'
-    """
-
-    months_dict = {'янв': 'января',
-                   'фев': 'февраля',
-                   'мар': 'марта',
-                   'апр': 'апреля',
-                   'мая': 'мая',
-                   'июн': 'июня',
-                   'июл': 'июля',
-                   'авг': 'августа',
-                   'сен': 'сентября',
-                   'окт': 'октября',
-                   'ноя': 'ноября',
-                   'дек': 'декабря'}
-
-    date_text = date_text.replace("\xa0", " ")  # Убираем неразрывные пробелы
-    match = re.search(r"(\d{1,2} \w+)•\w+•(\d{2}:\d{2})", date_text)
-
-    if match:
-        date_part = match.group(1)  # "10 окт"
-        date_part = date_part.split()[0] + ' ' + months_dict.get(date_part.split()[1])
-        return date_part
-    return "Неизвестно"
 
 
 def get_all_events_ticketland() -> List[dict] | None:
@@ -103,7 +75,7 @@ def get_all_events_ticketland() -> List[dict] | None:
                     raw_date = date_tag.text.strip()
                     date = clean_date(raw_date)  # Преобразуем дату и время
 
-                    category = category_tag.text.strip() if category_tag and len(category_tag.text.strip()) > 2 else "Неизвестно"  # Тип мероприятия с валидацией от пустого значения
+                    category = normalize_category(category_tag.text.strip()) if category_tag and len(category_tag.text.strip()) > 2 else "Неизвестно"  # Тип мероприятия с валидацией от пустого значения
                     venue = venue_tag["title"].strip() if venue_tag else "Неизвестно"
 
                     event_data = {
@@ -141,13 +113,3 @@ if __name__ == "__main__":
     if results:
         for event in results[:5]:  # Выводим первые 5 событий для проверки
             print(event)
-
-# результат
-# {
-# 'title': 'Группа «Neverlove»',
-# 'date': '12 мая',
-# 'time': '19:00',
-# 'category': 'Концерты',
-# 'venue': 'Клуб «Маяк»',
-# 'link': 'https://tomsk.ticketland.ru/kluby/klub-vk-stadium/neverlove/'
-# }

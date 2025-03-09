@@ -15,11 +15,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from config import logger
 from database.events_db import delete_event_by_url
+from parse.common_funcs import log_memory_usage
 
-
-def log_memory_usage():
-    mem = psutil.virtual_memory()
-    logger.info(f"📊 Память перед запуском Chrome: {mem.available / (1024 * 1024)} MB свободно")
 
 def init_driver(process_id):
     # Уникальный профиль для каждого процесса

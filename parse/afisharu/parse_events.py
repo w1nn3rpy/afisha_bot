@@ -9,60 +9,10 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from config import logger
+from parse.common_funcs import find_nearest_date
 
 BASE_URL = "https://www.afisha.ru/tomsk/events/page{}/performances/exhibitions/concerts/"
 
-# Маппинг русских месяцев в числовой формат
-MONTHS = {
-    "января": "01", "февраля": "02", "марта": "03", "апреля": "04",
-    "мая": "05", "июня": "06", "июля": "07", "августа": "08",
-    "сентября": "09", "октября": "10", "ноября": "11", "декабря": "12"
-}
-
-
-def find_nearest_date(date_str: str) -> str | None:
-    """ Преобразует строку с датой в формат 'DD.MM.YYYY', выбирая ближайшую из списка """
-
-    # Удаляем время (например, "в 19:00")
-    date_str = re.sub(r"\s+в\s+\d{1,2}:\d{2}", "", date_str)
-
-    # Убираем "и" и разделяем числа (например, "12, 19 и 26 марта" → ["12", "19", "26"])
-    date_str = date_str.replace(" и ", ", ")
-
-    # Разбиваем строку на части
-    parts = date_str.split()
-    if len(parts) < 2:
-        return None  # Если формат неверный
-
-    *days, month = parts  # Последнее слово — это месяц, остальные элементы — числа
-
-    if month not in MONTHS:
-        return None  # Если месяц не найден в списке
-
-    current_date = datetime.now()
-    current_year = current_date.year
-    current_month = current_date.month
-    month_num = int(MONTHS[month])
-
-    # Определяем год (если месяц уже прошел в этом году, берем следующий год)
-    year = current_year if month_num >= current_month else current_year + 1
-
-    # Ищем ближайшую подходящую дату
-    valid_dates = []
-    for day in days:
-        try:
-            event_date = datetime.strptime(f"{int(day):02d}.{month_num:02d}.{year}", "%d.%m.%Y")
-            if event_date >= current_date:
-                valid_dates.append(event_date)
-        except ValueError:
-            continue
-
-    if not valid_dates:
-        return None  # Если нет будущих дат, возвращаем None
-
-    nearest_date = min(valid_dates)  # Выбираем ближайшую дату
-
-    return nearest_date.strftime("%d.%m.%Y")
 
 def init_driver():
     """Инициализация WebDriver с обработкой ошибок."""
