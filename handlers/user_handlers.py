@@ -1,11 +1,12 @@
 from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, Union
+from aiogram.types import Message, CallbackQuery, Union, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from decouple import config
 
+from database.events_db import get_events
 from database.user_db import get_user, create_user, update_username, toggle_category, enable_notifications, \
     disable_notifications
 from config import bot, logger
@@ -43,10 +44,12 @@ async def menu_handler(call: CallbackQuery, state: FSMContext):
         await state.set_state(UserStates.select_categories)
         await call.message.edit_text(text='Выберите категории', reply_markup=await select_categories_kb(call.from_user.id))
 
-    elif call.data == 'get_today_events':
-        # await state.set_state(UserStates.get_today_events)
-        await state.clear()
-        await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
+    # elif call.data == 'get_today_events':
+    #     # await state.set_state(UserStates.get_today_events)
+    #     # await state.clear()
+        # await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
+        # events = await get_events('today')
+
 
     elif call.data == 'get_week_events':
         # await state.set_state(UserStates.get_week_events)
@@ -141,3 +144,64 @@ async def confirm_unsubscribe(call: CallbackQuery, state: FSMContext):
         await call.message.edit_text(
             f'Сейчас вы подписаны на уведомления раз в {frequency} {"дней" if frequency == 7 else "день"}',
             reply_markup=control_subscribe_kb(frequency))
+
+
+@user_router.message(Command("events"))
+async def show_events(message: Message):
+    """Хендлер для отправки первых 10 мероприятий."""
+    events = await get_events("week")
+    print(events)
+
+    if not events:
+        await message.answer("⚠️ Нет мероприятий на выбранный период.")
+        return
+
+    await send_events_batch(message, events, 0)
+
+
+async def send_events_batch(message, events, page):
+    """Функция отправки 10 мероприятий по одному в сообщении."""
+    per_page = 10
+    start_idx = page * per_page
+    end_idx = start_idx + per_page
+    batch = events[start_idx:end_idx]
+
+    if not batch:
+        await message.answer("⚠️ Нет больше мероприятий.")
+        return
+
+    for event in batch:
+        text = (f"🎟 <b>{event['title']}</b>\n"
+                f"📅 {event['date']}\n"
+                f"📍 {event['location']}\n"
+                f"🔗 <a href='{event['link']}'>Подробнее</a>\n\n")
+
+        await message.answer(text, parse_mode="HTML", disable_web_page_preview=True)
+
+    # Добавляем кнопки пагинации только под последним сообщением
+    total_pages = (len(events) + per_page - 1) // per_page  # Количество страниц
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="⬅️ Назад", callback_data=f"events_page:{page - 1}") if page > 0 else None,
+                InlineKeyboardButton(text="➡️ Вперёд",
+                                     callback_data=f"events_page:{page + 1}") if page < total_pages - 1 else None
+            ]
+        ]
+    )
+
+    await message.answer(f"📜 Страница {page + 1} из {total_pages}", reply_markup=keyboard)
+
+
+@user_router.callback_query(F.data.startswith("events_page:"))
+async def paginate_events(callback: CallbackQuery):
+    """Обработчик кнопок пагинации."""
+    page = int(callback.data.split(":")[1])
+    events = await get_events("week")
+
+    if page < 0 or page * 10 >= len(events):
+        await callback.answer("⚠️ Нет больше мероприятий.", show_alert=True)
+        return
+
+    await callback.message.delete()  # Удаляем предыдущее сообщение с кнопками
+    await send_events_batch(callback.message, events, page)

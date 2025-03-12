@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 import asyncpg
@@ -137,4 +138,34 @@ async def move_events_from_temp_to_release_table():
                 logger.info("🗑 Временная таблица очищена.")
             except Exception as cleanup_error:
                 logger.error(f"❌ Ошибка при очистке temp_events_table: {cleanup_error}")
+            await conn.close()
+
+async def get_events(period: str = 'today'):
+    conn = None
+    today = datetime.date.today()
+
+
+    if period == 'week':
+        end_date = today + datetime.timedelta(days=7)
+    elif period == 'month':
+        end_date = today + datetime.timedelta(days=31)
+    else:
+        end_date = today
+
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = '''
+        SELECT * FROM events
+        WHERE date = $1
+        ORDER BY date'''
+
+
+        events = await conn.fetch(query, today)
+        return events
+
+    except Exception as e:
+        logger.error(f'Произошла ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
             await conn.close()
