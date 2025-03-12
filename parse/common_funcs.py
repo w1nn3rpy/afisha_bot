@@ -57,8 +57,11 @@ def normalize_category(raw_categories: str) -> str:
 
     return ", ".join(sorted(normalized))  # Объединяем обратно
 
+from datetime import datetime, date
+import re
+
 def clean_date(date_text):
-    """Приводит дату к формату DD.MM.YYYY"""
+    """Приводит дату к формату date (YYYY-MM-DD)"""
 
     # Словарь для преобразования месяцев
     months_dict = {
@@ -84,16 +87,17 @@ def clean_date(date_text):
             current_year = datetime.now().year
 
             # Проверяем, не прошла ли дата в этом году
-            event_date = datetime.strptime(f"{day}.{month_number}.{current_year}", "%d.%m.%Y")
-            today = datetime.now()
+            event_date = date(current_year, int(month_number), int(day))
+            today = date.today()
 
             # Если дата уже прошла в этом году, используем следующий год
             if event_date < today:
-                current_year += 1
+                event_date = date(current_year + 1, int(month_number), int(day))
 
-            return f"{day.zfill(2)}.{month_number}.{current_year}"
+            return event_date  # Возвращаем объект типа date
 
-    return "Неизвестно"
+    return None  # Если дата не распознана, возвращаем None
+
 
 
 # Маппинг русских месяцев в числовой формат
@@ -104,8 +108,8 @@ MONTHS = {
 }
 
 
-def find_nearest_date(date_str: str) -> str | None:
-    """ Преобразует строку с датой в формат 'DD.MM.YYYY', выбирая ближайшую из списка """
+def find_nearest_date(date_str: str) -> date | None:
+    """ Преобразует строку с датой в формат `date`, выбирая ближайшую из списка """
 
     # Удаляем время (например, "в 19:00")
     date_str = re.sub(r"\s+в\s+\d{1,2}:\d{2}", "", date_str)
@@ -121,9 +125,9 @@ def find_nearest_date(date_str: str) -> str | None:
     *days, month = parts  # Последнее слово — это месяц, остальные элементы — числа
 
     if month not in MONTHS:
-        return None  # Если месяц не найден в списке
+        return None  # Если месяц не найден в словаре
 
-    current_date = datetime.now()
+    current_date = date.today()
     current_year = current_date.year
     current_month = current_date.month
     month_num = int(MONTHS[month])
@@ -135,7 +139,7 @@ def find_nearest_date(date_str: str) -> str | None:
     valid_dates = []
     for day in days:
         try:
-            event_date = datetime.strptime(f"{int(day):02d}.{month_num:02d}.{year}", "%d.%m.%Y")
+            event_date = date(year, month_num, int(day))
             if event_date >= current_date:
                 valid_dates.append(event_date)
         except ValueError:
@@ -144,9 +148,7 @@ def find_nearest_date(date_str: str) -> str | None:
     if not valid_dates:
         return None  # Если нет будущих дат, возвращаем None
 
-    nearest_date = min(valid_dates)  # Выбираем ближайшую дату
-
-    return nearest_date.strftime("%d.%m.%Y")
+    return min(valid_dates)  # Возвращаем ближайшую дату в формате date
 
 
 def log_memory_usage():
