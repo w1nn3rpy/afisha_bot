@@ -151,17 +151,17 @@ async def confirm_unsubscribe(call: CallbackQuery, state: FSMContext):
 @user_router.message(Command("events"))
 async def show_events(message: Message):
     """Хендлер для отправки первых 10 мероприятий."""
-    events = await get_events("week")
-    print(events)
+    period = 'week'
+    events = await get_events(period)
 
     if not events:
         await message.answer("⚠️ Нет мероприятий на выбранный период.")
         return
 
-    await send_events_batch(message, events, 0)
+    await send_events_batch(message, events, 0, period)
 
 
-async def send_events_batch(message, events, page):
+async def send_events_batch(message, events, page, period):
     """Функция отправки 10 мероприятий по одному в сообщении."""
     per_page = 10
     start_idx = page * per_page
@@ -189,9 +189,9 @@ async def send_events_batch(message, events, page):
     buttons = []
 
     if page > 0:
-        buttons.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"events_page:{page - 1}"))
+        buttons.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"events_page:{page - 1}:{period}"))
     if page < total_pages - 1:
-        buttons.append(InlineKeyboardButton(text="➡️ Вперёд", callback_data=f"events_page:{page + 1}"))
+        buttons.append(InlineKeyboardButton(text="➡️ Вперёд", callback_data=f"events_page:{page + 1}:{period}"))
 
     # Создаем клавиатуру только если есть кнопки
     if buttons:
@@ -205,11 +205,12 @@ async def send_events_batch(message, events, page):
 async def paginate_events(callback: CallbackQuery):
     """Обработчик кнопок пагинации."""
     page = int(callback.data.split(":")[1])
-    events = await get_events("week")
+    period = callback.data.split(":")[2]
+    events = await get_events(period)
 
     if page < 0 or page * 10 >= len(events):
         await callback.answer("⚠️ Нет больше мероприятий.", show_alert=True)
         return
 
     await callback.message.delete()  # Удаляем предыдущее сообщение с кнопками
-    await send_events_batch(callback.message, events, page)
+    await send_events_batch(callback.message, events, page, period)
