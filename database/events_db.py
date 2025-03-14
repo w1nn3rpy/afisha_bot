@@ -174,11 +174,21 @@ async def get_events(user_id, period: str = 'today'):
 
     try:
         conn = await asyncpg.connect(DB_URL)
-        query = '''
+        no_filter_query = '''
         SELECT * FROM events
         WHERE date BETWEEN $1 AND $2
         ORDER BY date'''
 
+        filters_query = '''
+        SELECT * FROM events
+        WHERE date BETWEEN $1 AND $2
+        AND category = ANY($3)
+        ORDER BY date'''
+
+        if filters:
+            query = filters_query
+        else:
+            query = no_filter_query
 
         events = await conn.fetch(query, today, end_date)
         print('evetns from db: ', events)
