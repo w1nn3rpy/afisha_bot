@@ -140,7 +140,7 @@ async def move_events_from_temp_to_release_table():
                 logger.error(f"❌ Ошибка при очистке temp_events_table: {cleanup_error}")
             await conn.close()
 
-async def get_user_filters(user_id)
+async def get_user_filters(user_id):
     conn = None
     try:
         conn = await asyncpg.connect(DB_URL)
