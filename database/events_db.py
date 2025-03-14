@@ -186,11 +186,10 @@ async def get_events(user_id, period: str = 'today'):
         ORDER BY date'''
 
         if filters:
-            query = filters_query
+            events = await conn.fetch(filters_query, today, end_date, filters)
         else:
-            query = no_filter_query
+            events = await conn.fetch(no_filter_query, today, end_date)
 
-        events = await conn.fetch(query, today, end_date)
         print('evetns from db: ', events)
         return events
 
