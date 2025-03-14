@@ -140,10 +140,30 @@ async def move_events_from_temp_to_release_table():
                 logger.error(f"❌ Ошибка при очистке temp_events_table: {cleanup_error}")
             await conn.close()
 
-async def get_events(period: str = 'today'):
+async def get_user_filters(user_id)
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = '''
+        SELECT selected_category
+        FROM users
+        WHERE user_id = $1'''
+        row = await conn.fetch(query, user_id)
+        print('row:', row)
+        return row
+
+    except Exception as e:
+        logger.error(f'Произошла ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
+
+
+async def get_events(user_id, period: str = 'today'):
     conn = None
     today = datetime.date.today()
-
+    filters = await get_user_filters(user_id)
 
     if period == 'week':
         end_date = today + datetime.timedelta(days=7)

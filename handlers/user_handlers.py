@@ -156,7 +156,7 @@ async def confirm_unsubscribe(call: CallbackQuery, state: FSMContext):
 
 async def show_events(call: CallbackQuery, period: str):
     """Хендлер для отправки первых 10 мероприятий."""
-    events = await get_events(period)
+    events = await get_events(call.from_user.id, period)
 
     if not events:
         await call.message.answer("⚠️ Нет мероприятий на выбранный период.")
@@ -207,15 +207,15 @@ async def send_events_batch(message, events, page, period):
 
 
 @user_router.callback_query(F.data.startswith("events_page:"))
-async def paginate_events(callback: CallbackQuery):
+async def paginate_events(call: CallbackQuery):
     """Обработчик кнопок пагинации."""
-    page = int(callback.data.split(":")[1])
-    period = callback.data.split(":")[2]
-    events = await get_events(period)
+    page = int(call.data.split(":")[1])
+    period = call.data.split(":")[2]
+    events = await get_events(call.from_user.id, period)
 
     if page < 0 or page * 10 >= len(events):
-        await callback.answer("⚠️ Нет больше мероприятий.", show_alert=True)
+        await call.answer("⚠️ Нет больше мероприятий.", show_alert=True)
         return
 
-    await callback.message.delete()  # Удаляем предыдущее сообщение с кнопками
-    await send_events_batch(callback.message, events, page, period)
+    await call.message.delete()  # Удаляем предыдущее сообщение с кнопками
+    await send_events_batch(call.message, events, page, period)
