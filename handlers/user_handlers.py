@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, Union, InlineKeyboardMarkup, InlineKeyboardButton
@@ -180,6 +182,7 @@ async def send_events_batch(message, events, page):
                 f"🔗 <a href='{event['link']}'>Подробнее</a>\n\n")
 
         await message.answer(text, parse_mode="HTML", disable_web_page_preview=True)
+        await asyncio.sleep(0.5)
 
     # Добавляем кнопки пагинации только под последним сообщением
     total_pages = (len(events) + per_page - 1) // per_page  # Количество страниц
