@@ -148,8 +148,8 @@ async def get_user_filters(user_id):
         SELECT selected_category
         FROM users
         WHERE user_id = $1'''
-        row = await conn.fetch(query, user_id)
-        print('row:', row[0])
+        row = await conn.fetchval(query, user_id)
+        print('row:', row)
         return row
 
     except Exception as e:
