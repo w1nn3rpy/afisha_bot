@@ -149,7 +149,7 @@ async def get_user_filters(user_id):
         FROM users
         WHERE user_id = $1'''
         row = await conn.fetch(query, user_id)
-        print('row:', row)
+        print('row:', row[0])
         return row
 
     except Exception as e:
