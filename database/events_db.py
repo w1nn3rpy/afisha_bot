@@ -160,7 +160,7 @@ async def get_events(period: str = 'today'):
         ORDER BY date'''
 
 
-        events = await conn.fetch(query, today)
+        events = await conn.fetch(query, today, end_date)
         print('evetns from db: ', events)
         return events
 
