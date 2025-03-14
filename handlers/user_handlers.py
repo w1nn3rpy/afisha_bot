@@ -194,6 +194,7 @@ async def send_events_batch(message, events, page, period):
 
     if page > 0:
         buttons.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"events_page:{page - 1}:{period}"))
+    buttons.append(InlineKeyboardButton(text='🏠 Вернуться в меню', callback_data='go_menu'))
     if page < total_pages - 1:
         buttons.append(InlineKeyboardButton(text="➡️ Вперёд", callback_data=f"events_page:{page + 1}:{period}"))
 
