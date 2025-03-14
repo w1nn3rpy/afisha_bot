@@ -18,6 +18,9 @@ from states.user_states import UserStates
 
 user_router = Router()
 
+async def delete_message(message: Message):
+    await bot.delete_message(message.chat.id, message.message_id)
+
 @user_router.callback_query(F.data == 'go_menu')
 async def go_menu(call: CallbackQuery, state: FSMContext):
     await state.set_state(UserStates.menu)
@@ -50,18 +53,21 @@ async def menu_handler(call: CallbackQuery, state: FSMContext):
         await state.set_state(UserStates.get_today_events)
         # await state.clear()
         # await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
+        await delete_message(call.message)
         await show_events(call, 'today')
-
 
     elif call.data == 'get_week_events':
         await state.set_state(UserStates.get_week_events)
         # await state.clear()
         # await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
+        await delete_message(call.message)
         await show_events(call, 'week')
+
     elif call.data == 'get_month_events':
         await state.set_state(UserStates.get_month_events)
         # await state.clear()
         # await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
+        await delete_message(call.message)
         await show_events(call, 'month')
 
     elif call.data == 'subscribe_on_notifications':
