@@ -156,7 +156,7 @@ async def get_events(period: str = 'today'):
         conn = await asyncpg.connect(DB_URL)
         query = '''
         SELECT * FROM events
-        WHERE date = $1
+        WHERE date BETWEEN $1 AND $2
         ORDER BY date'''
 
 
