@@ -46,23 +46,23 @@ async def menu_handler(call: CallbackQuery, state: FSMContext):
         await state.set_state(UserStates.select_categories)
         await call.message.edit_text(text='Выберите категории', reply_markup=await select_categories_kb(call.from_user.id))
 
-    # elif call.data == 'get_today_events':
-    #     # await state.set_state(UserStates.get_today_events)
-    #     # await state.clear()
+    elif call.data == 'get_today_events':
+        await state.set_state(UserStates.get_today_events)
+        # await state.clear()
         # await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
-        # events = await get_events('today')
+        await show_events(call, 'today')
 
 
     elif call.data == 'get_week_events':
-        # await state.set_state(UserStates.get_week_events)
-        await state.clear()
-        await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
-
+        await state.set_state(UserStates.get_week_events)
+        # await state.clear()
+        # await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
+        await show_events(call, 'week')
     elif call.data == 'get_month_events':
-        # await state.set_state(UserStates.get_month_events)
-        await state.clear()
-        await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
-
+        await state.set_state(UserStates.get_month_events)
+        # await state.clear()
+        # await call.message.edit_text('Функция ещё в разработке', reply_markup=go_menu_kb())
+        await show_events(call, 'month')
 
     elif call.data == 'subscribe_on_notifications':
 
@@ -148,17 +148,15 @@ async def confirm_unsubscribe(call: CallbackQuery, state: FSMContext):
             reply_markup=control_subscribe_kb(frequency))
 
 
-@user_router.message(Command("events"))
-async def show_events(message: Message):
+async def show_events(call: CallbackQuery, period: str):
     """Хендлер для отправки первых 10 мероприятий."""
-    period = 'week'
     events = await get_events(period)
 
     if not events:
-        await message.answer("⚠️ Нет мероприятий на выбранный период.")
+        await call.message.answer("⚠️ Нет мероприятий на выбранный период.")
         return
 
-    await send_events_batch(message, events, 0, period)
+    await send_events_batch(call.message, events, 0, period)
 
 
 async def send_events_batch(message, events, page, period):
