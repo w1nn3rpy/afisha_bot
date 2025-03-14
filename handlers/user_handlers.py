@@ -159,7 +159,8 @@ async def show_events(call: CallbackQuery, period: str):
     events = await get_events(call.from_user.id, period)
 
     if not events:
-        await call.message.answer("⚠️ Нет мероприятий на выбранный период.", reply_markup=go_menu_kb())
+        await call.message.answer("⚠️ Нет мероприятий на выбранный период.\n"
+                                  "(Проверьте выбранные категории)", reply_markup=go_menu_kb())
         return
 
     await send_events_batch(call.message, events, 0, period)
