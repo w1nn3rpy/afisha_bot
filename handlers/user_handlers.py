@@ -171,8 +171,9 @@ async def send_events_batch(message, events, page):
         return
 
     for event in batch:
+        date = event['date'].strftime('%d.%m.%Y')
         text = (f"🎟 <b>{event['title']}</b>\n"
-                f"📅 {event['date']}\n"
+                f"📅 {date}\n"
                 f"📍 {event['location']}\n"
                 f"🔗 <a href='{event['link']}'>Подробнее</a>\n\n")
 
