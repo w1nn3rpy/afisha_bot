@@ -176,8 +176,8 @@ async def send_events_batch(message, events, page):
         date = event['date'].strftime('%d.%m.%Y')
         text = (f"🎟 <b>{event['title']}</b>\n"
                 f"⭐️ <b>{event['category']}</b>\n"
-                f"📅 {date}\n"
-                f"📍 {event['location']}\n"
+                f"📅 <b>{date}</b>\n"
+                f"📍 <b>{event['location']}</b>\n"
                 f"<b>Описание</b>: {event['description']}\n"
                 f"🔗 <a href='{event['link']}'>Подробнее</a>\n\n")
 
@@ -186,17 +186,19 @@ async def send_events_batch(message, events, page):
 
     # Добавляем кнопки пагинации только под последним сообщением
     total_pages = (len(events) + per_page - 1) // per_page  # Количество страниц
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="⬅️ Назад", callback_data=f"events_page:{page - 1}") if page > 0 else None,
-                InlineKeyboardButton(text="➡️ Вперёд",
-                                     callback_data=f"events_page:{page + 1}") if page < total_pages - 1 else None
-            ]
-        ]
-    )
+    buttons = []
 
-    await message.answer(f"📜 Страница {page + 1} из {total_pages}", reply_markup=keyboard)
+    if page > 0:
+        buttons.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"events_page:{page - 1}"))
+    if page < total_pages - 1:
+        buttons.append(InlineKeyboardButton(text="➡️ Вперёд", callback_data=f"events_page:{page + 1}"))
+
+    # Создаем клавиатуру только если есть кнопки
+    if buttons:
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[buttons])
+        await message.answer(f"📜 Страница {page + 1} из {total_pages}", reply_markup=keyboard)
+    else:
+        await message.answer(f"📜 Страница {page + 1} из {total_pages}")
 
 
 @user_router.callback_query(F.data.startswith("events_page:"))
