@@ -173,8 +173,10 @@ async def send_events_batch(message, events, page):
     for event in batch:
         date = event['date'].strftime('%d.%m.%Y')
         text = (f"🎟 <b>{event['title']}</b>\n"
+                f"⭐️ <b>{event['category']}</b>\n"
                 f"📅 {date}\n"
                 f"📍 {event['location']}\n"
+                f"<b>Описание</b>: {event['description']}\n"
                 f"🔗 <a href='{event['link']}'>Подробнее</a>\n\n")
 
         await message.answer(text, parse_mode="HTML", disable_web_page_preview=True)
