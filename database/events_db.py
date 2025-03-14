@@ -161,6 +161,7 @@ async def get_events(period: str = 'today'):
 
 
         events = await conn.fetch(query, today)
+        print('evetns from db: ', events)
         return events
 
     except Exception as e:

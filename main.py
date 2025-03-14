@@ -14,8 +14,8 @@ async def main():
     dp.include_router(user_router)
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands()
-    await parse_everyday_afisharu()
-    await parse_everyday_ticketland()
+    # await parse_everyday_afisharu()
+    # await parse_everyday_ticketland()
     await dp.start_polling(bot)
 
 try:
