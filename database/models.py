@@ -20,6 +20,7 @@ async def create_table_if_not_exist():
             username VARCHAR(255) DEFAULT NULL,
             notifications BOOLEAN DEFAULT FALSE NOT NULL,
             notification_frequency INT2 CHECK (notification_frequency IN (7, 31)),
+            last_notify DATE DEFAULT NULL,
             selected_category TEXT[] DEFAULT '{}'
             )''',
 

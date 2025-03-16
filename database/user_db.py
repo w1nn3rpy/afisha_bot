@@ -1,3 +1,5 @@
+import datetime
+
 import asyncpg
 
 from config import logger
@@ -76,15 +78,17 @@ async def toggle_category(user_id, new_user_categories):
 
 async def enable_notifications(user_id, frequency: int):
     conn = None
+    today = datetime.date.today()
     try:
         conn = await asyncpg.connect(DB_URL)
         query = '''
         UPDATE users
         SET notifications = TRUE,
-            notification_frequency = $2
+            notification_frequency = $2,
+            last_notify = $3
         WHERE user_id = $1;'''
 
-        await conn.execute(query, user_id, frequency)
+        await conn.execute(query, user_id, frequency, today)
 
     except Exception as e:
         logger.error(f'Ошибка в {__name__}: {e}')
@@ -93,6 +97,27 @@ async def enable_notifications(user_id, frequency: int):
         if conn:
             await conn.close()
 
+async def update_last_notify(user_id):
+    conn = None
+    today = datetime.date.today()
+
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = '''
+        UPDATE users
+        SET last_notify = $1
+        WHERE user_id = $2'''
+
+        await conn.execute(query, today, user_id)
+
+    except Exception as e:
+        logger.error(f'Ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
+
+
 async def disable_notifications(user_id):
     conn = None
     try:
@@ -100,10 +125,35 @@ async def disable_notifications(user_id):
         query = '''
         UPDATE users
         SET notifications = FALSE,
-            notification_frequency = NULL
+            notification_frequency = NULL,
+            last_notify = NULL
         WHERE user_id = $1;'''
 
         await conn.execute(query, user_id)
+
+    except Exception as e:
+        logger.error(f'Ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
+
+async def get_users_for_notifications():
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+
+        today = datetime.date.today()
+
+        query = '''
+        SELECT user_id FROM users
+        WHERE notifications is TRUE 
+        AND last_notify + notification_frequency * INTERVAL '1 day' = $1
+        '''
+
+        row = await conn.fetch(query, today)
+
+        return row
 
     except Exception as e:
         logger.error(f'Ошибка в {__name__}: {e}')

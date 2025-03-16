@@ -8,12 +8,12 @@ from aiogram.fsm.state import State, StatesGroup
 
 from decouple import config
 
-from database.events_db import get_events
+from database.events_db import get_events, mark_event_as_visited_db
 from database.user_db import get_user, create_user, update_username, toggle_category, enable_notifications, \
     disable_notifications
 from config import bot, logger
 from keyboards.user_kbs import main_menu_kb, select_categories_kb, go_menu_kb, select_frequency_of_notifications_kb, \
-    control_subscribe_kb, confirm_unsubscribe_kb
+    control_subscribe_kb, confirm_unsubscribe_kb, event_is_visited_kb
 from states.user_states import UserStates
 
 user_router = Router()
@@ -186,7 +186,7 @@ async def send_events_batch(message, events, page, period):
                 f"<b>Описание</b>: {event['description']}\n"
                 f"🔗 <a href='{event['link']}'>Подробнее</a>\n\n")
 
-        await message.answer(text, parse_mode="HTML", disable_web_page_preview=True)
+        await message.answer(text, parse_mode="HTML", disable_web_page_preview=True, reply_markup=event_is_visited_kb(message.chat.id, event['id']))
         await asyncio.sleep(0.5)
 
     # Добавляем кнопки пагинации только под последним сообщением
@@ -220,3 +220,13 @@ async def paginate_events(call: CallbackQuery):
 
     await call.message.delete()  # Удаляем предыдущее сообщение с кнопками
     await send_events_batch(call.message, events, page, period)
+
+@user_router.callback_query(F.data.startswith('is_visited'))
+async def mark_as_visited(call: CallbackQuery):
+    user_id = int(call.data.split(":")[1])
+    event_id = int(call.data.split(":")[2])
+    try:
+        await delete_message(call.message)
+        await mark_event_as_visited_db(user_id, event_id)
+    except Exception as e:
+        await call.message.delete_reply_markup(str(call.message.message_id))

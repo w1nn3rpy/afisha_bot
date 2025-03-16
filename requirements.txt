@@ -7,3 +7,5 @@ requests==2.25.1
 python-decouple==3.8
 setuptools==65.5.0
 undetected-chromedriver==3.5.5
+apscheduler
+selenium==4.29.0

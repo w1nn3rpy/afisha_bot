@@ -83,3 +83,15 @@ def confirm_unsubscribe_kb():
     inline_kb.button(text='Вернуться назад ↩️', callback_data='go_back_fsm')
     inline_kb.adjust(1)
     return inline_kb.as_markup()
+
+def event_is_visited_kb(user_id, event_id):
+    inline_kb = [
+        [InlineKeyboardButton(text='✅ Я здесь был(а)', callback_data=f'is_visited:{user_id}:{event_id}')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)
+
+def go_menu_button():
+    inline_kb = [
+        [InlineKeyboardButton(text='Посмотреть 👀', callback_data='go_menu')]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb)

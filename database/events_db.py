@@ -175,23 +175,46 @@ async def get_events(user_id, period: str = 'today'):
     try:
         conn = await asyncpg.connect(DB_URL)
         no_filter_query = '''
-        SELECT * FROM events
-        WHERE date BETWEEN $1 AND $2
+        SELECT e.*
+        FROM events e
+        LEFT JOIN user_events ue
+        ON ue.user_id = $3 and ue.event_id = e.id and ue.visited = TRUE
+        WHERE ue.event_id IS NULL
+        AND e.date BETWEEN $1 AND $2
         ORDER BY date'''
 
         filters_query = '''
-        SELECT * FROM events
-        WHERE date BETWEEN $1 AND $2
+        SELECT e.* FROM events e
+        LEFT JOIN user_events ue
+        ON ue.user_id = $4 and ue.event_id = e.id and ue.visited = TRUE
+        WHERE ue.event_id IS NULL
+        AND e.date BETWEEN $1 AND $2
         AND category = ANY($3)
         ORDER BY date'''
 
         if filters:
-            events = await conn.fetch(filters_query, today, end_date, filters)
+            events = await conn.fetch(filters_query, today, end_date, filters, user_id)
         else:
-            events = await conn.fetch(no_filter_query, today, end_date)
+            events = await conn.fetch(no_filter_query, today, end_date, user_id)
 
         print('evetns from db: ', events)
         return events
+
+    except Exception as e:
+        logger.error(f'Произошла ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
+
+async def mark_event_as_visited_db(user_id, event_id):
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = '''
+        INSERT INTO user_events (user_id, event_id, visited)
+        VALUES ($1, $2, TRUE)'''
+        await conn.execute(query, user_id, event_id)
 
     except Exception as e:
         logger.error(f'Произошла ошибка в {__name__}: {e}')

@@ -1,0 +1,40 @@
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+from database.user_db import get_users_for_notifications, update_last_notify
+from config import bot, logger
+from keyboards.user_kbs import go_menu_button
+from parse.parse_everyday import parse_everyday_afisharu, parse_everyday_ticketland
+
+
+async def notify_user():
+    users_for_notify = await get_users_for_notifications()
+    if users_for_notify:
+        for user in users_for_notify:
+            user_id = user['user_id']
+            try:
+                await bot.send_message(chat_id=user_id,
+                                      text='Добрый день! Появилось много новых мероприятий!\n'
+                                           'Посмотрите сейчас!', reply_markup=go_menu_button())
+                await update_last_notify(user_id)
+
+            except Exception as e:
+                logger.error(f'Ошибка при попытке оповещения пользователя: {e}')
+                continue
+
+
+async def parse_events():
+    await bot.send_message(chat_id=5983514379, text='Начинаю парсить афишару')
+    await parse_everyday_afisharu()
+
+    await bot.send_message(chat_id=5983514379, text='Начинаю парсить тикетленд')
+    await parse_everyday_ticketland()
+
+    await bot.send_message(chat_id=5983514379, text='Закончил парсить мероприятия')
+
+
+def start_scheduler():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(notify_user, CronTrigger(hour=10), misfire_grace_time=180)
+    scheduler.add_job(parse_events, CronTrigger(day='*/3', hour=20), misfire_grace_time=180)
+    scheduler.start()
