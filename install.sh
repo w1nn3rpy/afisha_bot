@@ -35,7 +35,10 @@ sed -i "s/POSTGRES_DB: .*/POSTGRES_DB: ${POSTGRES_DB}/" docker-compose.yml
 echo "🔹 Запускаем docker-compose..."
 docker-compose up -d
 
-# === Добавляем новый адрес для подключения к БД в .env ===
+read -p "Введите токен бота Telegram: " BOT_TOKEN
+
+# === Добавляем новый адрес для подключения к БД и токен в .env ===
+sed -i "s/BOT_TOKEN: .*/BOT_TOKEN: ${BOT_TOKEN}" .env
 sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}|" .env
 
 # === Запуск Dockerfile ===
