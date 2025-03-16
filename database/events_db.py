@@ -222,3 +222,23 @@ async def mark_event_as_visited_db(user_id, event_id):
     finally:
         if conn:
             await conn.close()
+
+async def delete_past_events():
+    conn = None
+    today = datetime.date.today()
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = '''
+        DELETE FROM events
+        WHERE date < $1
+        '''
+        result = await conn.execute(query, today)
+        logger.info(f"Удалено {result} старых событий")
+
+
+    except Exception as e:
+        logger.error(f'Произошла ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()

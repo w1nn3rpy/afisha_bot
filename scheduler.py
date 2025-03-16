@@ -2,12 +2,13 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from database.user_db import get_users_for_notifications, update_last_notify
+from database.events_db import delete_past_events
 from config import bot, logger
 from keyboards.user_kbs import go_menu_button
 from parse.parse_everyday import parse_everyday_afisharu, parse_everyday_ticketland
 
 
-async def notify_user():
+async def notify_user_scheduler():
     users_for_notify = await get_users_for_notifications()
     if users_for_notify:
         for user in users_for_notify:
@@ -23,7 +24,7 @@ async def notify_user():
                 continue
 
 
-async def parse_events():
+async def parse_events_scheduler():
     await bot.send_message(chat_id=5983514379, text='Начинаю парсить афишару')
     await parse_everyday_afisharu()
 
@@ -32,9 +33,12 @@ async def parse_events():
 
     await bot.send_message(chat_id=5983514379, text='Закончил парсить мероприятия')
 
+async def delete_past_events_scheduler():
+    await delete_past_events()
 
 def start_scheduler():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(notify_user, CronTrigger(hour=10), misfire_grace_time=180)
-    scheduler.add_job(parse_events, CronTrigger(day='*/3', hour=20), misfire_grace_time=180)
+    scheduler.add_job(delete_past_events_scheduler, CronTrigger(hour=9), misfire_grace_time=180)
+    scheduler.add_job(notify_user_scheduler, CronTrigger(hour=10), misfire_grace_time=180)
+    scheduler.add_job(parse_events_scheduler, CronTrigger(day='*/3', hour=20), misfire_grace_time=180)
     scheduler.start()
