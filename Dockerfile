@@ -3,9 +3,13 @@ FROM python:3.10-slim
 WORKDIR /usr/src/app
 
 RUN apt-get update && \
-    apt-get install -y xvfb && \
-    apt-get install -y google-chrome-stable=133.0.6943.126 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* \
+    apt-get install -y wget unzip xvfb && \
+    wget -O /tmp/chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.126/linux64/chrome-linux64.zip && \
+    unzip /tmp/chrome-linux64.zip -d /opt/ && \
+    mv /opt/chrome-linux64 /opt/google-chrome && \
+    ln -s /opt/google-chrome/chrome /usr/bin/google-chrome && \
+    rm -rf /tmp/chrome-linux64.zip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
