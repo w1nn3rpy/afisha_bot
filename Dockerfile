@@ -2,9 +2,9 @@ FROM python:3.10-slim
 
 WORKDIR /usr/src/app
 
-RUN apt-get update && \
-    apt-get install -y wget unzip xvfb && \
-    wget -O /tmp/chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.126/linux64/chrome-linux64.zip && \
+RUN apt-get update && apt-get install -y wget unzip xvfb && \
+    CHROME_VERSION="133.0.6943.126" && \
+    wget -O /tmp/chrome-linux64.zip "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip" && \
     unzip /tmp/chrome-linux64.zip -d /opt/ && \
     mv /opt/chrome-linux64 /opt/google-chrome && \
     ln -s /opt/google-chrome/chrome /usr/bin/google-chrome && \
