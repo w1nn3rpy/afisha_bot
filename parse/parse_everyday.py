@@ -2,8 +2,6 @@ import asyncio
 import multiprocessing
 from typing import List, Dict, Callable
 
-from asyncpg import Record
-
 import os
 import psutil
 import shutil

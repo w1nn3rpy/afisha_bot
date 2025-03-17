@@ -1,6 +1,3 @@
-import re
-from datetime import datetime
-
 import psutil
 
 from config import logger
