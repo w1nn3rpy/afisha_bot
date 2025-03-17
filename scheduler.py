@@ -5,7 +5,7 @@ from database.user_db import get_users_for_notifications, update_last_notify
 from database.events_db import delete_past_events
 from config import bot, logger
 from keyboards.user_kbs import go_menu_button
-from parse.parse_everyday import parse_everyday_afisharu, parse_everyday_ticketland
+from parse.parse_everyday import parse_everyday_afisharu, parse_everyday_ticketland, parse_everyday_yandex_afisha
 
 
 async def notify_user_scheduler():
@@ -25,11 +25,14 @@ async def notify_user_scheduler():
 
 
 async def parse_events_scheduler():
-    await bot.send_message(chat_id=5983514379, text='Начинаю парсить афишару')
-    await parse_everyday_afisharu()
+    # await bot.send_message(chat_id=5983514379, text='Начинаю парсить афишару')
+    # await parse_everyday_afisharu()
+    #
+    # await bot.send_message(chat_id=5983514379, text='Начинаю парсить тикетленд')
+    # await parse_everyday_ticketland()
 
-    await bot.send_message(chat_id=5983514379, text='Начинаю парсить тикетленд')
-    await parse_everyday_ticketland()
+    await bot.send_message(chat_id=5983514379, text='Начинаю парсить яндекс афишу')
+    await parse_everyday_yandex_afisha()
 
     await bot.send_message(chat_id=5983514379, text='Закончил парсить мероприятия')
 

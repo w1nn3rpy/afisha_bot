@@ -19,7 +19,6 @@ from parse.common_funcs import log_memory_usage
 
 
 def init_driver(process_id):
-    # Уникальный профиль для каждого процесса
     # Создаем уникальную папку для каждого процесса
     user_data_dir = tempfile.mkdtemp(prefix=f"chrome_profile_{process_id}_")
 
@@ -61,7 +60,7 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
     descriptions = {url: 'Нет описания' for url in list_of_links}
 
     all_count = len(list_of_links)
-    current_count = 0
+    current_count = 1
 
     # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
     display_num = 99 + process_id  # Разные Xvfb для каждого процесса
@@ -75,7 +74,7 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
         for url, description in descriptions.items():
 
             log_memory_usage()
-            attempts = 0
+            attempts = 1
             max_attempts = 5
 
             while attempts < max_attempts:
@@ -154,6 +153,7 @@ def get_event_descriptions_ticketland(process_id, list_of_links: List[str]) -> D
                         logger.warning(f"[{process_id}] [WARNING] Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
+                    driver.delete_all_cookies()
                     driver.quit()
                     time.sleep(5)
                     driver = init_driver(process_id)

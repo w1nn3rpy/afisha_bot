@@ -102,8 +102,8 @@ def get_all_events_afisharu() -> List[dict] | None:
             return events
 
         except Exception as e:
-            logger.error(f"❌ Ошибка парсинга (попытка {attempt+1}/{max_attempts}): {e}")
             attempt += 1
+            logger.error(f"❌ Ошибка парсинга (попытка {attempt}/{max_attempts}): {e}")
             time.sleep(5)  # Ожидание перед повторной попыткой
 
             if 'driver' in locals():
