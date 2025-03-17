@@ -1,9 +1,12 @@
 import asyncio
+import os
 import random
 import time
 import traceback
+import tempfile
 from typing import List, Dict
 
+import undetected_chromedriver as uc
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,9 +14,45 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from config import logger
 from database.events_db import delete_event_by_url
-from parse.afisharu.parse_events import init_driver
 from parse.common_funcs import log_memory_usage
 
+
+def init_driver(process_id):
+    # Создаем уникальную папку для каждого процесса
+    user_data_dir = tempfile.mkdtemp(prefix=f"chrome_profile_{process_id}_")
+
+    # Создаем уникальный путь для undetected_chromedriver
+    uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
+    os.makedirs(uc_patcher_dir, exist_ok=True)
+
+    existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
+
+    """Создает и настраивает Chrome для парсинга."""
+    options = uc.ChromeOptions()
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+    options.add_argument("--profile-directory=Default")
+    prefs = {
+        "profile.managed_default_content_settings.images": 2,  # Выключаем загрузку картинок
+        "profile.default_content_setting_values.notifications": 2,  # Выключаем всплывающие окна
+        "profile.default_content_setting_values.geolocation": 2,  # Запрещаем геолокацию
+    }
+    options.add_experimental_option("prefs", prefs)
+    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений
+
+    port = 9222 + process_id  # Разные порты для разных процессов
+
+    driver = uc.Chrome(options=options,
+                       driver_executable_path=existing_driver,
+                       port=port,
+                       use_subprocess=True)
+
+    logger.info(f"[{process_id}] Инициализация драйвера...")
+
+    return driver
 
 def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
     """Получает описание мероприятия по ссылке."""
@@ -24,7 +63,12 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
     all_count = len(list_of_links)
     current_count = 1
 
-    driver = init_driver()
+    # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
+    display_num = 99 + process_id  # Разные Xvfb для каждого процесса
+    os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
+    os.environ["DISPLAY"] = f":{display_num}"
+
+    driver = init_driver(process_id)
     try:
         for url, description in descriptions.items():
             log_memory_usage()
@@ -90,7 +134,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
                     driver.delete_all_cookies()
                     driver.quit()
                     time.sleep(5)
-                    driver = init_driver()
+                    driver = init_driver(process_id)
                     logger.info(f'[{process_id}] [INFO] ℹ️  Браузер перезапущен')
                     time.sleep(5)
 
