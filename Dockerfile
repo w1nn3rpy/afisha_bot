@@ -19,7 +19,7 @@ RUN wget -O /tmp/chrome-linux64.zip "https://storage.googleapis.com/chrome-for-t
 # Устанавливаем Chromedriver
 RUN wget -O /tmp/chromedriver-linux64.zip "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chromedriver-linux64.zip" && \
     unzip /tmp/chromedriver-linux64.zip -d /opt/ && \
-    mv /opt/chromedriver-linux64/chromedriver /opt/chromedriver/ && \
+    mv /opt/chromedriver-linux64 /opt/chromedriver && \
     ln -s /opt/chromedriver/chromedriver /usr/bin/chromedriver && \
     rm -rf /tmp/chromedriver-linux64.zip
 
