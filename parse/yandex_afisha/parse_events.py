@@ -96,87 +96,82 @@ def get_all_events_yandex_afisha() -> List[Dict]:
     driver = init_driver()
     logger.info("🚀 Запускаем браузер...")
 
-    # 🔍 Проверка, что профиль работает
-    driver.get("https://www.whatismybrowser.com/")
-    soup = BeautifulSoup(driver.page_source, "html.parser")
-    print(soup.text)
-    print(driver.execute_script("return navigator.userAgent;"))
+    for link_of_type_event in create_base_urls():
+        category_key = link_of_type_event.split('/')[-1].split('?')[0]
+        category = types_of_event.get(category_key, 'Другое')
+        attempt = 0
+        max_attempts = 3
 
-    # for link_of_type_event in create_base_urls():
-    #     category_key = link_of_type_event.split('/')[-1].split('?')[0]
-    #     category = types_of_event.get(category_key, 'Другое')
-    #     attempt = 0
-    #     max_attempts = 3
-    #
-    #     while attempt < max_attempts:
-    #         try:
-    #             events = []
-    #             page = 1
-    #
-    #             while True:
-    #                 url = link_of_type_event.format(today, page)
-    #
-    #                 logger.info(f"🔍 Парсим [{category}], страница {page}...")
-    #                 driver.get(url)
-    #                 time.sleep(random.uniform(3, 6))
-    #
-    #                 scroll_down(driver)
-    #
-    #                 WebDriverWait(driver, 10).until(
-    #                     EC.presence_of_element_located((By.TAG_NAME, "body"))
-    #                 )
-    #                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
-    #                 time.sleep(random.uniform(1, 2))
-    #
-    #                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
-    #                 time.sleep(random.uniform(1, 2))
-    #
-    #                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    #                 time.sleep(random.uniform(2, 4))
-    #
-    #                 soup = BeautifulSoup(driver.page_source, "html.parser")
-    #                 print(soup.text)  # Проверяем, какие реальные классы у элементов
-    #
-    #                 event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
-    #                 if not event_cards:
-    #                     logger.info("✅ Нет данных на странице, парсинг завершен.")
-    #                     break
-    #
-    #                 for event in event_cards:
-    #                     try:
-    #                         title = event.find("h2", class_="Title-fq4hbj-3").text.strip()
-    #                         date = event.find("li", class_="DetailsItem-fq4hbj-1").text.strip()
-    #                         place = event.find("a", class_="PlaceLink-fq4hbj-2").text.strip()
-    #                         link_tag = event.find("a", class_="EventLink-sc-1x07jll-2")
-    #                         link = f"https://afisha.yandex.ru{link_tag['href']}" if link_tag else ""
-    #
-    #                         event_data = {
-    #                             "title": title,
-    #                             "category": category,
-    #                             "date": date,
-    #                             "venue": place,
-    #                             "link": link,
-    #                         }
-    #
-    #                         if title and date and place and link:
-    #                             events.append(event_data)
-    #
-    #                     except AttributeError:
-    #                         continue
-    #
-    #                 all_events.extend(events)
-    #                 page += 1
-    #                 time.sleep(1)  # Меньшая задержка для ускорения
-    #
-    #             break  # Успешно завершили категорию, выходим из while
-    #         except Exception as e:
-    #             attempt += 1
-    #             logger.error(f"❌ Ошибка парсинга (попытка {attempt}/{max_attempts}): {e}")
-    #             time.sleep(5)
-    #
-    #             driver.quit()  # Перезапуск браузера после ошибки
-    #             driver = init_driver()
-    #             logger.info("🔄 Перезапуск браузера...")
+        while attempt < max_attempts:
+            try:
+                events = []
+                page = 1
+
+                while True:
+                    url = link_of_type_event.format(today, page)
+
+                    logger.info(f"🔍 Парсим [{category}], страница {page}...")
+                    driver.get(url)
+                    time.sleep(random.uniform(3, 6))
+
+                    scroll_down(driver)
+
+                    WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.TAG_NAME, "body"))
+                    )
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
+                    time.sleep(random.uniform(1, 2))
+
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
+                    time.sleep(random.uniform(1, 2))
+
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(random.uniform(2, 4))
+
+                    soup = BeautifulSoup(driver.page_source, "html.parser")
+                    print(soup.text)  # Проверяем, какие реальные классы у элементов
+
+                    event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
+                    if not event_cards:
+                        logger.info("✅ Нет данных на странице, парсинг завершен.")
+                        break
+
+                    for event in event_cards:
+                        try:
+                            title = event.find("h2", class_="Title-fq4hbj-3").text.strip()
+                            date = event.find("li", class_="DetailsItem-fq4hbj-1").text.strip()
+                            place = event.find("a", class_="PlaceLink-fq4hbj-2").text.strip()
+                            link_tag = event.find("a", class_="EventLink-sc-1x07jll-2")
+                            link = f"https://afisha.yandex.ru{link_tag['href']}" if link_tag else ""
+
+                            event_data = {
+                                "title": title,
+                                "category": category,
+                                "date": date,
+                                "venue": place,
+                                "link": link,
+                            }
+
+                            if title and date and place and link:
+                                events.append(event_data)
+
+                        except AttributeError:
+                            continue
+
+                    all_events.extend(events)
+                    page += 1
+                    time.sleep(1)  # Меньшая задержка для ускорения
+
+                break  # Успешно завершили категорию, выходим из while
+
+            except Exception as e:
+                attempt += 1
+                logger.error(f"❌ Ошибка парсинга (попытка {attempt}/{max_attempts}): {e}")
+                time.sleep(5)
+
+                driver.quit()  # Перезапуск браузера после ошибки
+                driver = init_driver()
+                logger.info("🔄 Перезапуск браузера...")
 
     driver.quit()
     return all_events
