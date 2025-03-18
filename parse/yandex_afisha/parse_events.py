@@ -98,6 +98,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
 
     # 🔍 Проверка, что профиль работает
     driver.get("https://www.whatismybrowser.com/")
+    print(driver.page_source)
 
     # for link_of_type_event in create_base_urls():
     #     category_key = link_of_type_event.split('/')[-1].split('?')[0]
