@@ -23,7 +23,8 @@ def init_driver(process_id):
     user_data_dir = tempfile.mkdtemp(prefix=f"chrome_profile_{process_id}_")
 
     # Создаем уникальный путь для undetected_chromedriver
-    uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
+    # uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
+    uc_patcher_dir = f"/root/git/afisha_bot/chromedriver{process_id}"
     os.makedirs(uc_patcher_dir, exist_ok=True)
 
     existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
