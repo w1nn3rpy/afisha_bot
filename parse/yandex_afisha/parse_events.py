@@ -146,10 +146,16 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                             link_tag = event.find("a", class_="EventLink-sc-1x07jll-2")
                             link = f"https://afisha.yandex.ru{link_tag['href']}" if link_tag else ""
 
+                            try:
+                                parsed_date = parse_event_date(date)  # Здесь может быть ValueError
+                            except ValueError as e:
+                                print(f"⚠️ Ошибка парсинга даты [{date}]: {e}")
+                                continue  # Пропускаем этот event и идём дальше
+
                             event_data = {
                                 "title": title,
                                 "category": category,
-                                "date": parse_event_date(date),
+                                "date": parsed_date,
                                 "venue": place,
                                 "link": link,
                             }
