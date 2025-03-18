@@ -10,6 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
 
+from parse.yandex_afisha.parse_date import parse_event_date
+
 
 from config import logger
 def create_base_urls():
@@ -147,13 +149,14 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                             event_data = {
                                 "title": title,
                                 "category": category,
-                                "date": date,
+                                "date": parse_event_date(date),
                                 "venue": place,
                                 "link": link,
                             }
-
+                            print('event_data:', event_data)
                             if title and date and place and link:
                                 events.append(event_data)
+                                print('✅')
 
                         except AttributeError:
                             continue
