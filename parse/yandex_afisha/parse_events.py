@@ -58,7 +58,6 @@ def init_driver():
 
 
     driver = uc.Chrome(options=options,
-                       driver_executable_path=CHROMEDRIVER_PATH,
                        use_subprocess=True)
 
     logger.info(f"Инициализация драйвера...")
