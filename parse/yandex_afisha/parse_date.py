@@ -1,71 +1,82 @@
 import datetime
 import re
 import locale
+import calendar
 
-# Попытка установить русскую локаль
+# Устанавливаем русскую локаль для работы с названиями месяцев
 try:
     locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")
 except locale.Error:
-    print("⚠️ Локаль 'ru_RU.UTF-8' не поддерживается, используем системную локаль.")
-
-# Таблица преобразования месяцев
-MONTHS = {
-    "января": "январь", "февраля": "февраль", "марта": "март", "апреля": "апрель",
-    "мая": "май", "июня": "июнь", "июля": "июль", "августа": "август",
-    "сентября": "сентябрь", "октября": "октябрь", "ноября": "ноябрь", "декабря": "декабрь"
-}
+    pass  # В случае ошибки продолжаем без локали
 
 def parse_event_date(date_str: str) -> datetime.date:
-    today = datetime.date.today()
-    current_year = today.year
+    """
+    Преобразует строку с датой в объект datetime.date.
 
-    # 1️⃣ **Обрабатываем "сегодня" и "завтра"**
+    Поддерживает:
+    - "сб 22 марта, 18:00" → 22 марта
+    - "сегодня 18 марта, 19:00" → 18 марта
+    - "4 мая, 19:00" → 4 мая
+    - "20 и 27 марта" → 27 марта
+    - "март — декабрь" → 31 декабря (последний день месяца)
+    - "апрель" → 30 апреля (последний день месяца)
+    """
+
+    today = datetime.date.today()
+
+    # Если в строке есть "сегодня", заменяем на текущую дату
     if "сегодня" in date_str:
+        match = re.search(r"(\d{1,2}) (\w+)", date_str)
+        if match:
+            day, month = match.groups()
+            month_number = datetime.datetime.strptime(month, "%B").month
+            return datetime.date(today.year, month_number, int(day))
         return today
 
+    # Если в строке есть "завтра", берём следующий день
     if "завтра" in date_str:
         return today + datetime.timedelta(days=1)
 
-    # 2️⃣ **Удаляем день недели ("пт", "сб", и т. д.)** перед разбором даты
-    date_str = re.sub(r"^\w{2,3} ", "", date_str)
-
-    # 3️⃣ **Поиск даты "10 апреля, 19:00"**
+    # Поиск формата "22 марта, 18:00"
     match = re.search(r"(\d{1,2}) (\w+)", date_str)
     if match:
         day, month = match.groups()
-        if month in MONTHS:
-            month = MONTHS[month]  # Приводим месяц к именительному падежу
         try:
             month_number = datetime.datetime.strptime(month, "%B").month
-            event_year = current_year if month_number >= today.month else current_year + 1
-            return datetime.date(event_year, month_number, int(day))
+            return datetime.date(today.year, month_number, int(day))
         except ValueError:
-            print(f"⚠️ Ошибка парсинга даты: {date_str}")
+            pass
 
-    # 4️⃣ **Обрабатываем диапазон месяцев ("март — декабрь")**
+    # Если указан диапазон месяцев ("март — декабрь"), берём последний день последнего месяца
     match = re.search(r"(\w+) — (\w+)", date_str)
     if match:
         _, last_month = match.groups()
-        if last_month in MONTHS:
-            last_month = MONTHS[last_month]
         try:
             month_number = datetime.datetime.strptime(last_month, "%B").month
-            event_year = current_year if month_number >= today.month else current_year + 1
-            return datetime.date(event_year, month_number, 1)  # Берём 1-е число последнего месяца
+            last_day = calendar.monthrange(today.year, month_number)[1]  # Последний день месяца
+            return datetime.date(today.year, month_number, last_day)
         except ValueError:
-            print(f"⚠️ Ошибка парсинга даты: {date_str}")
+            pass
 
-    # 5️⃣ **Обрабатываем диапазон дней ("20 и 27 марта")**
+    # Если есть диапазон дат ("20 и 27 марта"), берём **последний день**
     match = re.search(r"(\d{1,2}) и (\d{1,2}) (\w+)", date_str)
     if match:
         _, last_day, month = match.groups()
-        if month in MONTHS:
-            month = MONTHS[month]
         try:
             month_number = datetime.datetime.strptime(month, "%B").month
-            event_year = current_year if month_number >= today.month else current_year + 1
-            return datetime.date(event_year, month_number, int(last_day))
+            return datetime.date(today.year, month_number, int(last_day))
         except ValueError:
-            print(f"⚠️ Ошибка парсинга даты: {date_str}")
+            pass
 
-    raise ValueError(f"Не удалось распарсить дату: {date_str}")
+    # Если указано только название месяца, выбираем последний день этого месяца
+    match = re.search(r"^(\w+)$", date_str.strip())
+    if match:
+        month = match.group(1)
+        try:
+            month_number = datetime.datetime.strptime(month, "%B").month
+            last_day = calendar.monthrange(today.year, month_number)[1]
+            return datetime.date(today.year, month_number, last_day)
+        except ValueError:
+            pass
+
+    raise ValueError(f"❌ Не удалось распарсить дату: {date_str}")
