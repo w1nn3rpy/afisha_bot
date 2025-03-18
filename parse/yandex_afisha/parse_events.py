@@ -55,24 +55,22 @@ def init_driver():
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--profile-directory=Default")
-    prefs = {
-        "profile.managed_default_content_settings.images": 2,  # Выключаем загрузку картинок
-        "profile.default_content_setting_values.notifications": 2,  # Выключаем всплывающие окна
-        "profile.default_content_setting_values.geolocation": 2,  # Запрещаем геолокацию
-    }
-    options.add_experimental_option("prefs", prefs)
-    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений
-    options.add_argument(
-        "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36")
-
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-popup-blocking")
+    options.add_argument("--enable-features=NetworkService,NetworkServiceInProcess")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-setuid-sandbox")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--disable-notifications")
+    options.add_argument("--disable-web-security")
+    options.add_argument("--allow-running-insecure-content")
 
+    # Подменяем user-agent (чтобы выглядел как обычный браузер)
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    )
 
     driver = uc.Chrome(options=options,
                        use_subprocess=True)
@@ -112,6 +110,17 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                     time.sleep(random.uniform(3, 6))
 
                     scroll_down(driver)
+
+                    js_enabled = driver.execute_script(
+                        "return typeof window === 'object' && typeof document === 'object' && typeof document.createElement === 'function';")
+
+                    if js_enabled:
+                        print("✅ JavaScript ВКЛЮЧЕН!")
+                    else:
+                        print("❌ JavaScript ОТКЛЮЧЕН!")
+
+                    webdriver_status = driver.execute_script("return navigator.webdriver")
+                    print(f"navigator.webdriver: {webdriver_status}")
 
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.TAG_NAME, "body"))
