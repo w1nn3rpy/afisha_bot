@@ -112,7 +112,8 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                 while True:
                     url = link_of_type_event.format(today, page)
 
-                    logger.info(f"🔍 Парсим [{category}], страница {page}...")
+                    logger.info(f"🔍 Парсим [{category}], страница {page}...\n"
+                                f"Найдено {len(events)} мероприятий")
                     driver.get(url)
                     time.sleep(random.uniform(3, 6))
 
@@ -131,7 +132,6 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                     time.sleep(random.uniform(2, 4))
 
                     soup = BeautifulSoup(driver.page_source, "html.parser")
-                    print(soup.text)  # Проверяем, какие реальные классы у элементов
 
                     event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
                     if not event_cards:
