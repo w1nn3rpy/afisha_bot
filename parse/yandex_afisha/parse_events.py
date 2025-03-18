@@ -59,7 +59,6 @@ def init_driver():
     options.add_argument(
         "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.88 Safari/537.36")
 
-    options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-popup-blocking")
 
@@ -98,18 +97,14 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                     url = link_of_type_event.format(today, page)
 
                     logger.info(f"🔍 Парсим [{category}], страница {page}...")
-                    logger.info(f'Пытаемся спарсить стр по адресу: {url}')
                     driver.get(url)
-                    logger.info('driver.get')
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.TAG_NAME, "body"))
                     )
-                    logger.info('webdriverwait')
 
                     soup = BeautifulSoup(driver.page_source, "html.parser")
-                    logger.info('soup')
+                    print(soup.text)
                     event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
-                    logger.info('event_cards')
                     if not event_cards:
                         logger.info("✅ Нет данных на странице, парсинг завершен.")
                         break
