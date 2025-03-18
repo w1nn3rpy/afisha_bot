@@ -92,18 +92,18 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                     url = link_of_type_event.format(today, page)
 
                     logger.info(f"🔍 Парсим [{category}], страница {page}...")
-                    logger.debug(f'Пытаемся спарсить стр по адресу: {url}')
+                    logger.info(f'Пытаемся спарсить стр по адресу: {url}')
                     driver.get(url)
-                    logger.debug('driver.get')
+                    logger.info('driver.get')
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CLASS_NAME, "event events-list__item yandex-sans"))
                     )
-                    logger.debug('webdriverwait')
+                    logger.info('webdriverwait')
 
                     soup = BeautifulSoup(driver.page_source, "html.parser")
-                    logger.debug('soup')
+                    logger.info('soup')
                     event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
-                    logger.debug('event_cards')
+                    logger.info('event_cards')
                     if not event_cards:
                         logger.info("✅ Нет данных на странице, парсинг завершен.")
                         break
