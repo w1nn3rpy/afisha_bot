@@ -1,13 +1,16 @@
 import datetime
+import os
+import shutil
 import time
 from typing import List, Dict
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import undetected_chromedriver as uc
+
 
 from config import logger
-from parse.ticketland.parse_description_of_events import init_driver
 def create_base_urls():
     categories = ["concert", "theatre", "kids", "art", "standup", "excursions", "show", "quest", "masterclass", "lectures"]
     base_urls = [f"https://afisha.yandex.ru/tomsk/{cat}?source=menu&date={{}}&period=365&page={{}}" for cat in categories]
@@ -26,11 +29,52 @@ types_of_event = {
     "lectures": "Наука"
 }
 
+def init_driver():
+
+    """Инициализация WebDriver с обработкой ошибок."""
+    CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+    if not CHROME_PATH:
+        raise FileNotFoundError(
+            "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
+
+    CHROMEDRIVER_PATH = shutil.which("chromedriver")
+    if not CHROMEDRIVER_PATH:
+        raise FileNotFoundError("ChromeDriver не найден! Установите его.")
+
+    """Создает и настраивает Chrome для парсинга."""
+    options = uc.ChromeOptions()
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--profile-directory=Default")
+    prefs = {
+        "profile.managed_default_content_settings.images": 2,  # Выключаем загрузку картинок
+        "profile.default_content_setting_values.notifications": 2,  # Выключаем всплывающие окна
+        "profile.default_content_setting_values.geolocation": 2,  # Запрещаем геолокацию
+    }
+    options.add_experimental_option("prefs", prefs)
+    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений
+
+
+    driver = uc.Chrome(options=options,
+                       driver_executable_path=CHROMEDRIVER_PATH,
+                       use_subprocess=True)
+
+    logger.info(f"Инициализация драйвера...")
+
+    return driver
+
 def get_all_events_yandex_afisha() -> List[Dict]:
     all_events = []
     today = datetime.date.today()
 
-    driver = init_driver(1)
+    # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
+    display_num = 99  # Разные Xvfb для каждого процесса
+    os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
+    os.environ["DISPLAY"] = f":{display_num}"
+
+    driver = init_driver()
     logger.info("🚀 Запускаем браузер...")
 
     for link_of_type_event in create_base_urls():
@@ -97,7 +141,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                 time.sleep(5)
 
                 driver.quit()  # Перезапуск браузера после ошибки
-                driver = init_driver(1)
+                driver = init_driver()
                 logger.info("🔄 Перезапуск браузера...")
 
     driver.quit()
