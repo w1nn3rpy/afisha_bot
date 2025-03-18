@@ -55,22 +55,27 @@ def init_driver():
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-popup-blocking")
-    options.add_argument("--enable-features=NetworkService,NetworkServiceInProcess")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-setuid-sandbox")
-    options.add_argument("--disable-infobars")
-    options.add_argument("--disable-notifications")
-    options.add_argument("--disable-web-security")
-    options.add_argument("--allow-running-insecure-content")
+    options.add_argument("user-data-dir=/home/user/.config/google-chrome")
+    options.add_argument("profile-directory=Default")
 
-    # Подменяем user-agent (чтобы выглядел как обычный браузер)
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-    )
+    options.add_argument("--disable-blink-features=AutomationControlled")  # Убираем признак автоматизации
+    options.add_argument("--disable-gpu")  # Отключаем GPU, если сервер без графического интерфейса
+    options.add_argument("--no-sandbox")  # Запускаем без песочницы (нужно на серверах)
+    options.add_argument("--disable-dev-shm-usage")  # Избегаем проблем с разделяемой памятью (на Linux)
+    options.add_argument("--disable-infobars")  # Убираем "Chrome is being controlled by automated test software"
+    options.add_argument("--disable-popup-blocking")  # Отключаем блокировку всплывающих окон
+    options.add_argument("--remote-debugging-port=9222")  # Включаем удалённую отладку
+    options.add_argument("--start-maximized")  # Запуск в развернутом виде (некоторые сайты иначе ведут себя по-другому)
+    options.add_argument("--disable-extensions")  # Отключаем расширения, если они не нужны
+    options.add_argument("--disable-background-timer-throttling")  # Отключаем ограничение фоновых задач
+    options.add_argument("--disable-backgrounding-occluded-windows")  # Избегаем замедлений при работе в фоне
+    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений (ускорение парсинга)
+    options.add_argument("--mute-audio")  # Отключаем звук (если вдруг запускаются медиа)
+
+    # # Подменяем user-agent (чтобы выглядел как обычный браузер)
+    # options.add_argument(
+    #     "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    # )
 
     driver = uc.Chrome(options=options,
                        use_subprocess=True)
@@ -91,92 +96,84 @@ def get_all_events_yandex_afisha() -> List[Dict]:
     driver = init_driver()
     logger.info("🚀 Запускаем браузер...")
 
-    for link_of_type_event in create_base_urls():
-        category_key = link_of_type_event.split('/')[-1].split('?')[0]
-        category = types_of_event.get(category_key, 'Другое')
-        attempt = 0
-        max_attempts = 3
+    # 🔍 Проверка, что профиль работает
+    driver.get("https://www.whatismybrowser.com/")
 
-        while attempt < max_attempts:
-            try:
-                events = []
-                page = 1
-
-                while True:
-                    url = link_of_type_event.format(today, page)
-
-                    logger.info(f"🔍 Парсим [{category}], страница {page}...")
-                    driver.get(url)
-                    time.sleep(random.uniform(3, 6))
-
-                    scroll_down(driver)
-
-                    js_enabled = driver.execute_script(
-                        "return typeof window === 'object' && typeof document === 'object' && typeof document.createElement === 'function';")
-
-                    if js_enabled:
-                        print("✅ JavaScript ВКЛЮЧЕН!")
-                    else:
-                        print("❌ JavaScript ОТКЛЮЧЕН!")
-
-                    webdriver_status = driver.execute_script("return navigator.webdriver")
-                    print(f"navigator.webdriver: {webdriver_status}")
-
-                    WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.TAG_NAME, "body"))
-                    )
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
-                    time.sleep(random.uniform(1, 2))
-
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
-                    time.sleep(random.uniform(1, 2))
-
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    time.sleep(random.uniform(2, 4))
-
-                    soup = BeautifulSoup(driver.page_source, "html.parser")
-                    print(soup.text)  # Проверяем, какие реальные классы у элементов
-
-                    event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
-                    if not event_cards:
-                        logger.info("✅ Нет данных на странице, парсинг завершен.")
-                        break
-
-                    for event in event_cards:
-                        try:
-                            title = event.find("h2", class_="Title-fq4hbj-3").text.strip()
-                            date = event.find("li", class_="DetailsItem-fq4hbj-1").text.strip()
-                            place = event.find("a", class_="PlaceLink-fq4hbj-2").text.strip()
-                            link_tag = event.find("a", class_="EventLink-sc-1x07jll-2")
-                            link = f"https://afisha.yandex.ru{link_tag['href']}" if link_tag else ""
-
-                            event_data = {
-                                "title": title,
-                                "category": category,
-                                "date": date,
-                                "venue": place,
-                                "link": link,
-                            }
-
-                            if title and date and place and link:
-                                events.append(event_data)
-
-                        except AttributeError:
-                            continue
-
-                    all_events.extend(events)
-                    page += 1
-                    time.sleep(1)  # Меньшая задержка для ускорения
-
-                break  # Успешно завершили категорию, выходим из while
-            except Exception as e:
-                attempt += 1
-                logger.error(f"❌ Ошибка парсинга (попытка {attempt}/{max_attempts}): {e}")
-                time.sleep(5)
-
-                driver.quit()  # Перезапуск браузера после ошибки
-                driver = init_driver()
-                logger.info("🔄 Перезапуск браузера...")
+    # for link_of_type_event in create_base_urls():
+    #     category_key = link_of_type_event.split('/')[-1].split('?')[0]
+    #     category = types_of_event.get(category_key, 'Другое')
+    #     attempt = 0
+    #     max_attempts = 3
+    #
+    #     while attempt < max_attempts:
+    #         try:
+    #             events = []
+    #             page = 1
+    #
+    #             while True:
+    #                 url = link_of_type_event.format(today, page)
+    #
+    #                 logger.info(f"🔍 Парсим [{category}], страница {page}...")
+    #                 driver.get(url)
+    #                 time.sleep(random.uniform(3, 6))
+    #
+    #                 scroll_down(driver)
+    #
+    #                 WebDriverWait(driver, 10).until(
+    #                     EC.presence_of_element_located((By.TAG_NAME, "body"))
+    #                 )
+    #                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
+    #                 time.sleep(random.uniform(1, 2))
+    #
+    #                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
+    #                 time.sleep(random.uniform(1, 2))
+    #
+    #                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    #                 time.sleep(random.uniform(2, 4))
+    #
+    #                 soup = BeautifulSoup(driver.page_source, "html.parser")
+    #                 print(soup.text)  # Проверяем, какие реальные классы у элементов
+    #
+    #                 event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
+    #                 if not event_cards:
+    #                     logger.info("✅ Нет данных на странице, парсинг завершен.")
+    #                     break
+    #
+    #                 for event in event_cards:
+    #                     try:
+    #                         title = event.find("h2", class_="Title-fq4hbj-3").text.strip()
+    #                         date = event.find("li", class_="DetailsItem-fq4hbj-1").text.strip()
+    #                         place = event.find("a", class_="PlaceLink-fq4hbj-2").text.strip()
+    #                         link_tag = event.find("a", class_="EventLink-sc-1x07jll-2")
+    #                         link = f"https://afisha.yandex.ru{link_tag['href']}" if link_tag else ""
+    #
+    #                         event_data = {
+    #                             "title": title,
+    #                             "category": category,
+    #                             "date": date,
+    #                             "venue": place,
+    #                             "link": link,
+    #                         }
+    #
+    #                         if title and date and place and link:
+    #                             events.append(event_data)
+    #
+    #                     except AttributeError:
+    #                         continue
+    #
+    #                 all_events.extend(events)
+    #                 page += 1
+    #                 time.sleep(1)  # Меньшая задержка для ускорения
+    #
+    #             break  # Успешно завершили категорию, выходим из while
+    #         except Exception as e:
+    #             attempt += 1
+    #             logger.error(f"❌ Ошибка парсинга (попытка {attempt}/{max_attempts}): {e}")
+    #             time.sleep(5)
+    #
+    #             driver.quit()  # Перезапуск браузера после ошибки
+    #             driver = init_driver()
+    #             logger.info("🔄 Перезапуск браузера...")
 
     driver.quit()
     return all_events
