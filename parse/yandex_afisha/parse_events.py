@@ -57,7 +57,7 @@ def init_driver():
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений
     options.add_argument(
-        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.88 Safari/537.36")
 
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--disable-extensions")
@@ -102,7 +102,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                     driver.get(url)
                     logger.info('driver.get')
                     WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, "event events-list__item yandex-sans"))
+                        EC.presence_of_element_located((By.TAG_NAME, "body"))
                     )
                     logger.info('webdriverwait')
 
