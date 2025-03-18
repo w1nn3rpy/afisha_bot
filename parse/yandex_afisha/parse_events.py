@@ -7,8 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from config import logger
-from parse.afisharu.parse_events import init_driver
-
+from parse.ticketland.parse_description_of_events import init_driver
 def create_base_urls():
     categories = ["concert", "theatre", "kids", "art", "standup", "excursions", "show", "quest", "masterclass", "lectures"]
     base_urls = [f"https://afisha.yandex.ru/tomsk/{cat}?source=menu&date={{}}&period=365&page={{}}" for cat in categories]
@@ -31,7 +30,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
     all_events = []
     today = datetime.date.today()
 
-    driver = init_driver()
+    driver = init_driver(1)
     logger.info("🚀 Запускаем браузер...")
 
     for link_of_type_event in create_base_urls():
@@ -52,7 +51,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                     logger.debug(f'Пытаемся спарсить стр по адресу: {url}')
                     driver.get(url)
                     logger.debug('driver.get')
-                    WebDriverWait(driver, 20).until(
+                    WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CLASS_NAME, "event events-list__item yandex-sans"))
                     )
                     logger.debug('webdriverwait')
@@ -98,7 +97,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                 time.sleep(5)
 
                 driver.quit()  # Перезапуск браузера после ошибки
-                driver = init_driver()
+                driver = init_driver(1)
                 logger.info("🔄 Перезапуск браузера...")
 
     driver.quit()
