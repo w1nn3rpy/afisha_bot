@@ -72,10 +72,10 @@ def init_driver():
     options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений (ускорение парсинга)
     options.add_argument("--mute-audio")  # Отключаем звук (если вдруг запускаются медиа)
 
-    # # Подменяем user-agent (чтобы выглядел как обычный браузер)
-    # options.add_argument(
-    #     "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-    # )
+    # Подменяем user-agent (чтобы выглядел как обычный браузер)
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    )
 
     driver = uc.Chrome(options=options,
                        use_subprocess=True)
@@ -100,6 +100,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
     driver.get("https://www.whatismybrowser.com/")
     soup = BeautifulSoup(driver.page_source, "html.parser")
     print(soup.text)
+    print(driver.execute_script("return navigator.userAgent;"))
 
     # for link_of_type_event in create_base_urls():
     #     category_key = link_of_type_event.split('/')[-1].split('?')[0]
