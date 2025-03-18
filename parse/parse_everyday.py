@@ -83,7 +83,7 @@ async def parse_everyday_yandex_afisha():
     #     description = run_parallel(get_event_description_yandex_afisha, list_of_links)
     #     await add_descriptions(description)
     #
-    # await asyncio.to_thread(clean_up)
+    await asyncio.to_thread(clean_up)
     #
     # await move_events_from_temp_to_release_table()
 
