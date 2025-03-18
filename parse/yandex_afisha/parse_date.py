@@ -2,13 +2,13 @@ import datetime
 import re
 import locale
 
-# Устанавливаем русскую локаль для работы с названиями месяцев
+# Устанавливаем русскую локаль для работы с русскими месяцами
 try:
     locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")
 except locale.Error:
     print("⚠️ Локаль 'ru_RU.UTF-8' не поддерживается, используем локаль по умолчанию.")
 
-# Словарь для приведения названий месяцев к именительному падежу
+# Словарь для преобразования месяцев из родительного падежа в именительный
 MONTHS = {
     "января": "январь", "февраля": "февраль", "марта": "март", "апреля": "апрель",
     "мая": "май", "июня": "июнь", "июля": "июль", "августа": "август",
@@ -32,57 +32,51 @@ def parse_event_date(date_str: str) -> datetime.date:
     today = datetime.date.today()
     current_year = today.year
 
-    # Если в строке есть "сегодня", заменяем на текущую дату
+    # 1️⃣ **Обрабатываем "сегодня" и "завтра"**
     if "сегодня" in date_str:
-        match = re.search(r"(\d{1,2}) (\w+)", date_str)
-        if match:
-            day, month = match.groups()
-            month = MONTHS.get(month, month)  # Приводим к нормальной форме
-            month_number = datetime.datetime.strptime(month, "%B").month
-            return datetime.date(current_year, month_number, int(day))
         return today
 
-    # Если в строке есть "завтра", берём следующий день
     if "завтра" in date_str:
         return today + datetime.timedelta(days=1)
 
-    # Поиск формата "22 марта, 18:00"
+    # 2️⃣ **Удаляем день недели ("пт", "сб", и т. д.)** перед разбором даты
+    date_str = re.sub(r"^\w{2,3} ", "", date_str)
+
+    # 3️⃣ **Поиск даты "22 марта, 18:00"**
     match = re.search(r"(\d{1,2}) (\w+)", date_str)
     if match:
         day, month = match.groups()
-        month = MONTHS.get(month, month)
+        month = MONTHS.get(month, month)  # Приводим к именительному падежу
         try:
             month_number = datetime.datetime.strptime(month, "%B").month
-            # Если месяц уже прошёл, добавляем 1 год
             event_year = current_year if month_number >= today.month else current_year + 1
             return datetime.date(event_year, month_number, int(day))
-        except ValueError:
-            pass
+        except ValueError as e:
+            print(f"⚠️ Ошибка парсинга даты [{date_str}]: {e}")
 
-    # Если указан диапазон месяцев ("март — декабрь"), берём последний месяц
+    # 4️⃣ **Обрабатываем диапазон месяцев ("март — декабрь")**
     match = re.search(r"(\w+) — (\w+)", date_str)
     if match:
         _, last_month = match.groups()
-        last_month = MONTHS.get(last_month, last_month)  # Приводим к нормальной форме
+        last_month = MONTHS.get(last_month, last_month)
         try:
             month_number = datetime.datetime.strptime(last_month, "%B").month
-            # Если месяц уже прошёл, добавляем 1 год
             event_year = current_year if month_number >= today.month else current_year + 1
             return datetime.date(event_year, month_number, 1)  # Берём 1-е число последнего месяца
-        except ValueError:
-            pass
+        except ValueError as e:
+            print(f"⚠️ Ошибка парсинга даты [{date_str}]: {e}")
 
-    # Если есть диапазон дат ("20 и 27 марта"), берём **последний день**
+    # 5️⃣ **Обрабатываем диапазон дней ("20 и 27 марта")**
     match = re.search(r"(\d{1,2}) и (\d{1,2}) (\w+)", date_str)
     if match:
         _, last_day, month = match.groups()
         month = MONTHS.get(month, month)
         try:
             month_number = datetime.datetime.strptime(month, "%B").month
-            # Если месяц уже прошёл, добавляем 1 год
             event_year = current_year if month_number >= today.month else current_year + 1
             return datetime.date(event_year, month_number, int(last_day))
-        except ValueError:
-            pass
+        except ValueError as e:
+            print(f"⚠️ Ошибка парсинга даты [{date_str}]: {e}")
 
+    # Если ничего не получилось разобрать, выбрасываем ошибку
     raise ValueError(f"Не удалось распарсить дату: {date_str}")
