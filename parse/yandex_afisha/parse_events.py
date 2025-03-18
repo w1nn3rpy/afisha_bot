@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 import shutil
 import time
 from typing import List, Dict
@@ -29,6 +30,17 @@ types_of_event = {
     "lectures": "Наука"
 }
 
+def scroll_down(driver):
+    """Плавный скроллинг страницы для загрузки всех элементов"""
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    while True:
+        driver.execute_script("window.scrollBy(0, window.innerHeight / 2);")  # Прокручиваем на 50% экрана
+        time.sleep(random.uniform(1, 2))  # Ждём подгрузку элементов
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break  # Достигли конца страницы
+        last_height = new_height
+
 def init_driver():
 
     """Инициализация WebDriver с обработкой ошибок."""
@@ -56,7 +68,7 @@ def init_driver():
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений
     options.add_argument(
-        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.6998.88 Safari/537.36")
+        "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36")
 
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-popup-blocking")
@@ -97,12 +109,25 @@ def get_all_events_yandex_afisha() -> List[Dict]:
 
                     logger.info(f"🔍 Парсим [{category}], страница {page}...")
                     driver.get(url)
+                    time.sleep(random.uniform(3, 6))
+
+                    scroll_down(driver)
+
                     WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.TAG_NAME, "body"))
                     )
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
+                    time.sleep(random.uniform(1, 2))
+
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
+                    time.sleep(random.uniform(1, 2))
+
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(random.uniform(2, 4))
 
                     soup = BeautifulSoup(driver.page_source, "html.parser")
-                    print(soup.text)
+                    print(soup.prettify())  # Проверяем, какие реальные классы у элементов
+
                     event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
                     if not event_cards:
                         logger.info("✅ Нет данных на странице, парсинг завершен.")
