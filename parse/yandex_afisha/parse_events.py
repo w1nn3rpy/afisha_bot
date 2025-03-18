@@ -135,7 +135,7 @@ def get_all_events_yandex_afisha() -> List[Dict]:
                     time.sleep(random.uniform(2, 4))
 
                     soup = BeautifulSoup(driver.page_source, "html.parser")
-                    print(soup.prettify())  # Проверяем, какие реальные классы у элементов
+                    print(soup.text)  # Проверяем, какие реальные классы у элементов
 
                     event_cards = soup.find_all("div", class_="event events-list__item yandex-sans")
                     if not event_cards:
