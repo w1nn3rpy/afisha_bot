@@ -44,7 +44,7 @@ def init_driver(process_id):
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
-    options.add_argument("user-data-dir=/home/user/.config/google-chrome")
+    options.add_argument(f"user-data-dir=/home/user/.config/google-chrome{process_id}")
     options.add_argument("profile-directory=Default")
 
     options.add_argument("--disable-blink-features=AutomationControlled")  # Убираем признак автоматизации
@@ -93,6 +93,8 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
     os.environ["DISPLAY"] = f":{display_num}"
 
     driver = init_driver(process_id)
+    logger.info("🚀 Запускаем браузер...")
+
     try:
         for url, description in descriptions.items():
             log_memory_usage()
