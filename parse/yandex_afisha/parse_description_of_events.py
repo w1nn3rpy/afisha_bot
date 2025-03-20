@@ -27,7 +27,7 @@ def kill_xvfb():
         lock_file = f"/tmp/.X{display_num}-lock"
         if os.path.exists(lock_file):
             os.remove(lock_file)
-            logger.info(f"[Xvfb] Lock file {lock_file} removed")
+            logger.info(f"🗑️ [Xvfb] Lock file {lock_file} removed")
 
 def start_xvfb(process_id):
     # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
@@ -37,66 +37,7 @@ def start_xvfb(process_id):
     logger.info(f"✅ Xvfb запущен на :{display_num}")
 
 
-def init_driver(process_id):
-
-    # """Инициализация WebDriver с обработкой ошибок."""
-    # CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
-    # if not CHROME_PATH:
-    #     raise FileNotFoundError(
-    #         "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
-    #
-    # CHROMEDRIVER_PATH = shutil.which("chromedriver")
-    # if not CHROMEDRIVER_PATH:
-    #     raise FileNotFoundError("ChromeDriver не найден! Установите его.")
-
-    # # Создаем уникальный путь для undetected_chromedriver
-    # uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
-    # os.makedirs(uc_patcher_dir, exist_ok=True)
-
-    # Создаем уникальный путь для undetected_chromedriver
-    uc_patcher_dir = f"/root/git/afisha_bot/chromedriver{process_id}"
-    os.makedirs(uc_patcher_dir, exist_ok=True)
-
-    existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
-
-
-    """Создает и настраивает Chrome для парсинга."""
-    options = uc.ChromeOptions()
-    options.add_argument(f"user-data-dir=/home/user/.config/google-chrome{process_id}")
-    options.add_argument("profile-directory=Default")
-
-    options.add_argument("--disable-blink-features=AutomationControlled")  # Убираем признак автоматизации
-    options.add_argument("--disable-gpu")  # Отключаем GPU, если сервер без графического интерфейса
-    options.add_argument("--no-sandbox")  # Запускаем без песочницы (нужно на серверах)
-    options.add_argument("--disable-dev-shm-usage")  # Избегаем проблем с разделяемой памятью (на Linux)
-    options.add_argument("--disable-infobars")  # Убираем "Chrome is being controlled by automated test software"
-    options.add_argument("--disable-popup-blocking")  # Отключаем блокировку всплывающих окон
-    options.add_argument("--remote-debugging-port=9222")  # Включаем удалённую отладку
-    options.add_argument("--start-maximized")  # Запуск в развернутом виде (некоторые сайты иначе ведут себя по-другому)
-    options.add_argument("--disable-extensions")  # Отключаем расширения, если они не нужны
-    options.add_argument("--disable-background-timer-throttling")  # Отключаем ограничение фоновых задач
-    options.add_argument("--disable-backgrounding-occluded-windows")  # Избегаем замедлений при работе в фоне
-    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений (ускорение парсинга)
-    options.add_argument("--mute-audio")  # Отключаем звук (если вдруг запускаются медиа)
-
-    # Подменяем user-agent (чтобы выглядел как обычный браузер)
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-    )
-
-    port = 9222 + process_id  # Разные порты для разных процессов
-
-
-    driver = uc.Chrome(options=options,
-                       driver_executable_path=existing_driver,
-                       port=port,
-                       use_subprocess=True)
-
-    logger.info(f"Инициализация драйвера...")
-
-    return driver
-
-# def init_driver():
+# def init_driver(process_id):
 #
 #     # """Инициализация WebDriver с обработкой ошибок."""
 #     # CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
@@ -108,15 +49,20 @@ def init_driver(process_id):
 #     # if not CHROMEDRIVER_PATH:
 #     #     raise FileNotFoundError("ChromeDriver не найден! Установите его.")
 #
+#     # # Создаем уникальный путь для undetected_chromedriver
+#     # uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
+#     # os.makedirs(uc_patcher_dir, exist_ok=True)
+#
 #     # Создаем уникальный путь для undetected_chromedriver
-#     uc_patcher_dir = f"/root/git/afisha_bot/chromedriver0"
+#     uc_patcher_dir = f"/root/git/afisha_bot/chromedriver{process_id}"
 #     os.makedirs(uc_patcher_dir, exist_ok=True)
 #
 #     existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
 #
+#
 #     """Создает и настраивает Chrome для парсинга."""
 #     options = uc.ChromeOptions()
-#     options.add_argument("user-data-dir=/home/user/.config/google-chrome")
+#     options.add_argument(f"user-data-dir=/home/user/.config/google-chrome")
 #     options.add_argument("profile-directory=Default")
 #
 #     options.add_argument("--disable-blink-features=AutomationControlled")  # Убираем признак автоматизации
@@ -138,13 +84,67 @@ def init_driver(process_id):
 #         "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
 #     )
 #
+#     port = 9222 + process_id  # Разные порты для разных процессов
+#
+#
 #     driver = uc.Chrome(options=options,
 #                        driver_executable_path=existing_driver,
+#                        port=port,
 #                        use_subprocess=True)
 #
 #     logger.info(f"Инициализация драйвера...")
 #
 #     return driver
+
+def init_driver():
+
+    """Инициализация WebDriver с обработкой ошибок."""
+    CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+    if not CHROME_PATH:
+        raise FileNotFoundError(
+            "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
+
+    CHROMEDRIVER_PATH = shutil.which("chromedriver")
+    if not CHROMEDRIVER_PATH:
+        raise FileNotFoundError("ChromeDriver не найден! Установите его.")
+
+    # # Создаем уникальный путь для undetected_chromedriver
+    # uc_patcher_dir = f"/root/git/afisha_bot/chromedriver0"
+    # os.makedirs(uc_patcher_dir, exist_ok=True)
+    #
+    # existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
+
+    """Создает и настраивает Chrome для парсинга."""
+    options = uc.ChromeOptions()
+    options.add_argument("user-data-dir=/home/user/.config/google-chrome")
+    options.add_argument("profile-directory=Default")
+
+    options.add_argument("--disable-blink-features=AutomationControlled")  # Убираем признак автоматизации
+    options.add_argument("--disable-gpu")  # Отключаем GPU, если сервер без графического интерфейса
+    options.add_argument("--no-sandbox")  # Запускаем без песочницы (нужно на серверах)
+    options.add_argument("--disable-dev-shm-usage")  # Избегаем проблем с разделяемой памятью (на Linux)
+    options.add_argument("--disable-infobars")  # Убираем "Chrome is being controlled by automated test software"
+    options.add_argument("--disable-popup-blocking")  # Отключаем блокировку всплывающих окон
+    options.add_argument("--remote-debugging-port=9222")  # Включаем удалённую отладку
+    options.add_argument("--start-maximized")  # Запуск в развернутом виде (некоторые сайты иначе ведут себя по-другому)
+    options.add_argument("--disable-extensions")  # Отключаем расширения, если они не нужны
+    options.add_argument("--disable-background-timer-throttling")  # Отключаем ограничение фоновых задач
+    options.add_argument("--disable-backgrounding-occluded-windows")  # Избегаем замедлений при работе в фоне
+    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений (ускорение парсинга)
+    options.add_argument("--mute-audio")  # Отключаем звук (если вдруг запускаются медиа)
+
+    # Подменяем user-agent (чтобы выглядел как обычный браузер)
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    )
+
+    driver = uc.Chrome(options=options,
+                       # driver_executable_path=existing_driver,
+                       use_subprocess=True)
+
+    logger.info(f"Инициализация драйвера...")
+
+    return driver
 
 def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
     """Получает описание мероприятия по ссылке."""
@@ -155,9 +155,11 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
     all_count = len(list_of_links)
     current_count = 1
 
+    process_id = 0
+
     start_xvfb(process_id)
 
-    driver = init_driver(process_id)
+    driver = init_driver()
     logger.info("🚀 Запускаем браузер...")
 
     try:
@@ -237,7 +239,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
 
                     driver.quit()
                     time.sleep(5)
-                    driver = init_driver(process_id)
+                    driver = init_driver()
                     logger.info(f'[{process_id}][INFO] ℹ️  Браузер перезапущен')
                     time.sleep(5)
 
