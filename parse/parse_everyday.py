@@ -15,7 +15,7 @@ from parse.afisharu.parse_events import get_all_events_afisharu
 from parse.afisharu.parse_description_of_events import get_event_description_afisharu
 from parse.ticketland.parse_description_of_events import get_event_descriptions_ticketland
 from parse.yandex_afisha.parse_events import get_all_events_yandex_afisha
-from parse.yandex_afisha.parse_description_of_events import get_event_description_yandex_afisha
+from parse.yandex_afisha.parse_description_of_events import get_event_description_yandex_afisha, kill_xvfb
 
 
 def run_parallel(func: Callable, urls: List[str], num_processes: int = 2) -> Dict[str, str]:
@@ -80,6 +80,7 @@ async def parse_everyday_yandex_afisha():
     list_of_links = [record['link'] for record in list_of_records]
 
     if list_of_links is not None:
+        kill_xvfb()
         description = run_parallel(get_event_description_yandex_afisha, list_of_links)
         # description = get_event_description_yandex_afisha(list_of_links)
         await add_descriptions(description)

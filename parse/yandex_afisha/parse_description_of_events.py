@@ -19,8 +19,7 @@ from database.events_db import delete_event_by_url
 from parse.common_funcs import log_memory_usage
 from parse.yandex_afisha.parse_events import scroll_down
 
-
-def start_xvfb(process_id):
+def kill_xvfb():
     # 1️⃣ Останавливаем ВСЕ Xvfb-процессы
     subprocess.run(["pkill", "Xvfb"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
@@ -30,6 +29,7 @@ def start_xvfb(process_id):
             os.remove(lock_file)
             logger.info(f"[Xvfb] Lock file {lock_file} removed")
 
+def start_xvfb(process_id):
     # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
     display_num = 99 + process_id # Разные Xvfb для каждого процесса
     os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
