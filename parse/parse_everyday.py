@@ -72,17 +72,17 @@ async def parse_everyday_afisharu():
     await move_events_from_temp_to_release_table()
 
 async def parse_everyday_yandex_afisha():
-    # all_events_list_of_dicts = get_all_events_yandex_afisha()
-    # if all_events_list_of_dicts is not None:
-    #     await add_events(all_events_list_of_dicts)
-
-    list_of_records = await get_events_without_description()
-    list_of_links = [record['link'] for record in list_of_records]
-
-    if list_of_links is not None:
-        # description = run_parallel(get_event_description_yandex_afisha, list_of_links)
-        description = get_event_description_yandex_afisha(list_of_links)
-        await add_descriptions(description)
+    all_events_list_of_dicts = get_all_events_yandex_afisha()
+    if all_events_list_of_dicts is not None:
+        await add_events(all_events_list_of_dicts)
+    #
+    # list_of_records = await get_events_without_description()
+    # list_of_links = [record['link'] for record in list_of_records]
+    #
+    # if list_of_links is not None:
+    #     # description = run_parallel(get_event_description_yandex_afisha, list_of_links)
+    #     description = get_event_description_yandex_afisha(list_of_links)
+    #     await add_descriptions(description)
 
     await asyncio.to_thread(clean_up)
 
