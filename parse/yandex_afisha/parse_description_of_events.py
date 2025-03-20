@@ -168,73 +168,73 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
             max_attempts = 5
 
             while attempts < max_attempts:
-
-                logger.info(f"[{process_id}][INFO] ℹ️  {current_count}/{all_count} Открываем страницу: {url}")
-                driver.get(url)
-                time.sleep(random.uniform(3, 6))
-
-                scroll_down(driver)
-
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-                logger.info(f"[{process_id}][INFO] ℹ️  Страница загружена!")
-
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
-                time.sleep(random.uniform(1, 2))
-
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
-                time.sleep(random.uniform(1, 2))
-
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(random.uniform(2, 4))
-
                 try:
-                    # Проверяем наличие элемента с текстом "Ошибка 404" в error-page__body
-                    error_body = driver.find_element(By.CSS_SELECTOR, "body.error-page__body")
-                    error_text = error_body.find_element(By.CSS_SELECTOR, "div.ErrorTitle-wvicct-11").text
+                    logger.info(f"[{process_id}][INFO] ℹ️  {current_count}/{all_count} Открываем страницу: {url}")
+                    driver.get(url)
 
-                    if "Ошибка 404" in error_text or "Такой страницы не существует" in error_text:
-                        logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
-                        asyncio.run(delete_event_by_url(url))
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                    logger.info(f"[{process_id}][INFO] ℹ️  Страница загружена!")
+
+                    scroll_down(driver)
+
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
+                    time.sleep(random.uniform(1, 2))
+
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
+                    time.sleep(random.uniform(1, 2))
+
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(random.uniform(2, 4))
+
+                    try:
+                        # Проверяем наличие элемента с текстом "Ошибка 404" в error-page__body
+                        error_body = driver.find_element(By.CSS_SELECTOR, "body.error-page__body")
+                        error_text = error_body.find_element(By.CSS_SELECTOR, "div.ErrorTitle-wvicct-11").text
+
+                        if "Ошибка 404" in error_text or "Такой страницы не существует" in error_text:
+                            logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
+                            asyncio.run(delete_event_by_url(url))
+                            break
+
+                    except NoSuchElementException:
+                        pass  # Ошибки нет, продолжаем
+
+                    try:
+                        # Ждём появления блока описания на странице
+                        description_block = WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-test-id='eventInfo.description']"))
+                        )
+
+                        soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
+
+                        # Пробуем найти текст описания внутри div class="tlWAxz"
+                        description_element = soup.find("div", class_="tlWAxz")
+
+                        if description_element:
+                            new_description = description_element.text.strip()
+                            logger.info(f"[{process_id}][INFO] ✅ Описание: {new_description}")
+
+                            if len(new_description) > 5:
+                                descriptions[url] = new_description
+                            else:
+                                logger.info(f"[{process_id}][INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+
+                        else:
+                            logger.warning(f"[{process_id}] ⚠️ Описание не найдено.")
+                            descriptions[url] = "Нет описания"
+
                         break
 
-                except NoSuchElementException:
-                    pass  # Ошибки нет, продолжаем
-
-                try:
-                    # Ждём появления блока описания на странице
-                    description_block = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-test-id='eventInfo.description']"))
-                    )
-
-                    soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
-
-                    # Пробуем найти текст описания внутри div class="tlWAxz"
-                    description_element = soup.find("div", class_="tlWAxz")
-
-                    if description_element:
-                        new_description = description_element.text.strip()
-                        logger.info(f"[{process_id}][INFO] ✅ Описание: {new_description}")
-
-                        if len(new_description) > 5:
-                            descriptions[url] = new_description
-                        else:
-                            logger.info(f"[{process_id}][INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
-
-                    else:
-                        logger.warning(f"[{process_id}] ⚠️ Описание не найдено.")
-                        descriptions[url] = "Нет описания"
-
-                    break
-
-                except Exception as e:
-                    attempts += 1
-                    logger.error(f"[{process_id}][ERROR {attempts}/{max_attempts}] ❌ Ошибка при обработке {url}: {e}")
+                    except Exception as e:
+                        attempts += 1
+                        logger.error(f"[{process_id}][ERROR {attempts}/{max_attempts}] ❌ Ошибка при обработке {url}: {e}")
 
                     if attempts > 3:
                         asyncio.run(delete_event_by_url(url))
                         logger.warning(f"[{process_id}][WARNING] ⚠️ Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
+                except Exception as e:
                     driver.quit()
                     time.sleep(5)
                     driver = init_driver()
