@@ -169,14 +169,14 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
 
             while attempts < max_attempts:
 
-                logger.info(f"[INFO] ℹ️  {current_count}/{all_count} Открываем страницу: {url}")
+                logger.info(f"[{process_id}][INFO] ℹ️  {current_count}/{all_count} Открываем страницу: {url}")
                 driver.get(url)
                 time.sleep(random.uniform(3, 6))
 
                 scroll_down(driver)
 
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-                logger.info(f"[INFO] ℹ️  Страница загружена!")
+                logger.info(f"[{process_id}][INFO] ℹ️  Страница загружена!")
 
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
                 time.sleep(random.uniform(1, 2))
@@ -193,7 +193,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
                     error_text = error_body.find_element(By.CSS_SELECTOR, "div.ErrorTitle-wvicct-11").text
 
                     if "Ошибка 404" in error_text or "Такой страницы не существует" in error_text:
-                        logger.warning(f"⚠️ Страница 404! Удаляем {url}")
+                        logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
                         asyncio.run(delete_event_by_url(url))
                         break
 
@@ -213,41 +213,41 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
 
                     if description_element:
                         new_description = description_element.text.strip()
-                        logger.info(f"[INFO] ✅ Описание: {new_description}")
+                        logger.info(f"[{process_id}][INFO] ✅ Описание: {new_description}")
 
                         if len(new_description) > 5:
                             descriptions[url] = new_description
                         else:
-                            logger.info(f"[INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                            logger.info(f"[{process_id}][INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
                     else:
-                        logger.warning(f"⚠️ Описание не найдено.")
+                        logger.warning(f"[{process_id}] ⚠️ Описание не найдено.")
                         descriptions[url] = "Нет описания"
 
                     break
 
                 except Exception as e:
                     attempts += 1
-                    logger.error(f"[ERROR {attempts}/{max_attempts}] ❌ Ошибка при обработке {url}: {e}")
+                    logger.error(f"[{process_id}][ERROR {attempts}/{max_attempts}] ❌ Ошибка при обработке {url}: {e}")
 
                     if attempts > 3:
                         asyncio.run(delete_event_by_url(url))
-                        logger.warning(f"[WARNING] ⚠️ Страница {url} не загрузилась! Удаляем из базы.")
+                        logger.warning(f"[{process_id}][WARNING] ⚠️ Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
                     driver.quit()
                     time.sleep(5)
                     driver = init_driver(process_id)
-                    logger.info(f'[INFO] ℹ️  Браузер перезапущен')
+                    logger.info(f'[{process_id}][INFO] ℹ️  Браузер перезапущен')
                     time.sleep(5)
 
             time.sleep(random.uniform(0.5, 2))  # Задержка для избежания бана
             current_count += 1
-        logger.info(f'[INFO] ℹ️  Возвращение значений descriptions')
+        logger.info(f'[{process_id}][INFO] ℹ️  Возвращение значений descriptions')
         return descriptions
 
     except Exception as e:
-        logger.error(f"[ERROR] ❌ Произошла ошибка:")
+        logger.error(f"[{process_id}][ERROR] ❌ Произошла ошибка:")
         logger.error(traceback.format_exc())
         return descriptions
 
@@ -255,4 +255,4 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
 
         if 'driver' in locals():
             driver.quit()
-            logger.info(f"[INFO] ℹ️  Браузер закрыт!")
+            logger.info(f"[{process_id}][INFO] ℹ️  Браузер закрыт!")
