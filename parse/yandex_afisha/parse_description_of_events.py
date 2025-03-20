@@ -19,7 +19,7 @@ from parse.common_funcs import log_memory_usage
 from parse.yandex_afisha.parse_events import scroll_down
 
 
-def init_driver():
+def init_driver(process_id):
 
     """Инициализация WebDriver с обработкой ошибок."""
     CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
@@ -30,6 +30,10 @@ def init_driver():
     CHROMEDRIVER_PATH = shutil.which("chromedriver")
     if not CHROMEDRIVER_PATH:
         raise FileNotFoundError("ChromeDriver не найден! Установите его.")
+
+    # Создаем уникальный путь для undetected_chromedriver
+    uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
+    os.makedirs(uc_patcher_dir, exist_ok=True)
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
@@ -76,7 +80,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
     os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
     os.environ["DISPLAY"] = f":{display_num}"
 
-    driver = init_driver()
+    driver = init_driver(process_id)
     try:
         for url, description in descriptions.items():
             log_memory_usage()
@@ -154,7 +158,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
 
                     driver.quit()
                     time.sleep(5)
-                    driver = init_driver()
+                    driver = init_driver(process_id)
                     logger.info(f'[{process_id}] [INFO] ℹ️  Браузер перезапущен')
                     time.sleep(5)
 
