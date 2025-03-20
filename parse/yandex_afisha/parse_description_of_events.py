@@ -1,6 +1,7 @@
 import asyncio
 import os
 import random
+import shutil
 import time
 import traceback
 import tempfile
@@ -15,42 +16,49 @@ from bs4 import BeautifulSoup
 from config import logger
 from database.events_db import delete_event_by_url
 from parse.common_funcs import log_memory_usage
+from parse.yandex_afisha.parse_events import scroll_down
 
 
-def init_driver(process_id):
-    # Создаем уникальную папку для каждого процесса
-    user_data_dir = tempfile.mkdtemp(prefix=f"chrome_profile_{process_id}_")
+def init_driver():
 
-    # Создаем уникальный путь для undetected_chromedriver
-    uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
-    os.makedirs(uc_patcher_dir, exist_ok=True)
+    """Инициализация WebDriver с обработкой ошибок."""
+    CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+    if not CHROME_PATH:
+        raise FileNotFoundError(
+            "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
 
-    existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
+    CHROMEDRIVER_PATH = shutil.which("chromedriver")
+    if not CHROMEDRIVER_PATH:
+        raise FileNotFoundError("ChromeDriver не найден! Установите его.")
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument(f"--user-data-dir={user_data_dir}")
-    options.add_argument("--profile-directory=Default")
-    prefs = {
-        "profile.managed_default_content_settings.images": 2,  # Выключаем загрузку картинок
-        "profile.default_content_setting_values.notifications": 2,  # Выключаем всплывающие окна
-        "profile.default_content_setting_values.geolocation": 2,  # Запрещаем геолокацию
-    }
-    options.add_experimental_option("prefs", prefs)
-    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений
+    options.add_argument("user-data-dir=/home/user/.config/google-chrome")
+    options.add_argument("profile-directory=Default")
 
-    port = 9222 + process_id  # Разные порты для разных процессов
+    options.add_argument("--disable-blink-features=AutomationControlled")  # Убираем признак автоматизации
+    options.add_argument("--disable-gpu")  # Отключаем GPU, если сервер без графического интерфейса
+    options.add_argument("--no-sandbox")  # Запускаем без песочницы (нужно на серверах)
+    options.add_argument("--disable-dev-shm-usage")  # Избегаем проблем с разделяемой памятью (на Linux)
+    options.add_argument("--disable-infobars")  # Убираем "Chrome is being controlled by automated test software"
+    options.add_argument("--disable-popup-blocking")  # Отключаем блокировку всплывающих окон
+    options.add_argument("--remote-debugging-port=9222")  # Включаем удалённую отладку
+    options.add_argument("--start-maximized")  # Запуск в развернутом виде (некоторые сайты иначе ведут себя по-другому)
+    options.add_argument("--disable-extensions")  # Отключаем расширения, если они не нужны
+    options.add_argument("--disable-background-timer-throttling")  # Отключаем ограничение фоновых задач
+    options.add_argument("--disable-backgrounding-occluded-windows")  # Избегаем замедлений при работе в фоне
+    options.add_argument("--blink-settings=imagesEnabled=false")  # Отключаем загрузку изображений (ускорение парсинга)
+    options.add_argument("--mute-audio")  # Отключаем звук (если вдруг запускаются медиа)
+
+    # Подменяем user-agent (чтобы выглядел как обычный браузер)
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    )
 
     driver = uc.Chrome(options=options,
-                       driver_executable_path=existing_driver,
-                       port=port,
                        use_subprocess=True)
 
-    logger.info(f"[{process_id}] Инициализация драйвера...")
+    logger.info(f"Инициализация драйвера...")
 
     return driver
 
@@ -68,7 +76,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
     os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
     os.environ["DISPLAY"] = f":{display_num}"
 
-    driver = init_driver(process_id)
+    driver = init_driver()
     try:
         for url, description in descriptions.items():
             log_memory_usage()
@@ -80,8 +88,21 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
 
                 logger.info(f"[{process_id}] [INFO] ℹ️  {current_count}/{all_count} Открываем страницу: {url}")
                 driver.get(url)
-                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                time.sleep(random.uniform(3, 6))
+
+                scroll_down(driver)
+
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
                 logger.info(f"[{process_id}] [INFO] ℹ️  Страница загружена!")
+
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 3);")
+                time.sleep(random.uniform(1, 2))
+
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 1.5);")
+                time.sleep(random.uniform(1, 2))
+
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(random.uniform(2, 4))
 
                 try:
                     # Проверяем наличие элемента с текстом "Ошибка 404" в error-page__body
@@ -98,7 +119,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
 
                 try:
                     # Ждём появления блока описания на странице
-                    description_block = WebDriverWait(driver, 20).until(
+                    description_block = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-test-id='eventInfo.description']"))
                     )
 
@@ -131,10 +152,9 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
                         logger.warning(f"[{process_id}] [WARNING] ⚠️ Страница {url} не загрузилась! Удаляем из базы.")
                         break
 
-                    driver.delete_all_cookies()
                     driver.quit()
                     time.sleep(5)
-                    driver = init_driver(process_id)
+                    driver = init_driver()
                     logger.info(f'[{process_id}] [INFO] ℹ️  Браузер перезапущен')
                     time.sleep(5)
 
