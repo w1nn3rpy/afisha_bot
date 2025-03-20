@@ -80,15 +80,21 @@ from parse.yandex_afisha.parse_events import scroll_down
 
 def init_driver():
 
-    """Инициализация WebDriver с обработкой ошибок."""
-    CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
-    if not CHROME_PATH:
-        raise FileNotFoundError(
-            "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
+    # """Инициализация WebDriver с обработкой ошибок."""
+    # CHROME_PATH = shutil.which("google-chrome") or shutil.which("google-chrome-stable")
+    # if not CHROME_PATH:
+    #     raise FileNotFoundError(
+    #         "Google Chrome не найден! Установите его через 'sudo apt install google-chrome-stable'.")
+    #
+    # CHROMEDRIVER_PATH = shutil.which("chromedriver")
+    # if not CHROMEDRIVER_PATH:
+    #     raise FileNotFoundError("ChromeDriver не найден! Установите его.")
 
-    CHROMEDRIVER_PATH = shutil.which("chromedriver")
-    if not CHROMEDRIVER_PATH:
-        raise FileNotFoundError("ChromeDriver не найден! Установите его.")
+    # Создаем уникальный путь для undetected_chromedriver
+    uc_patcher_dir = f"/root/git/afisha_bot/chromedriver0"
+    os.makedirs(uc_patcher_dir, exist_ok=True)
+
+    existing_driver = os.path.join(uc_patcher_dir, "chromedriver")
 
     """Создает и настраивает Chrome для парсинга."""
     options = uc.ChromeOptions()
@@ -115,6 +121,7 @@ def init_driver():
     )
 
     driver = uc.Chrome(options=options,
+                       driver_executable_path=existing_driver,
                        use_subprocess=True)
 
     logger.info(f"Инициализация драйвера...")
