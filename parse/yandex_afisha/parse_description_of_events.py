@@ -31,8 +31,12 @@ def init_driver(process_id):
     if not CHROMEDRIVER_PATH:
         raise FileNotFoundError("ChromeDriver не найден! Установите его.")
 
+    # # Создаем уникальный путь для undetected_chromedriver
+    # uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
+    # os.makedirs(uc_patcher_dir, exist_ok=True)
+
     # Создаем уникальный путь для undetected_chromedriver
-    uc_patcher_dir = f"/usr/src/app/chromedriver{process_id}"
+    uc_patcher_dir = f"/root/git/afisha_bot/chromedriver{process_id}"
     os.makedirs(uc_patcher_dir, exist_ok=True)
 
     """Создает и настраивает Chrome для парсинга."""
