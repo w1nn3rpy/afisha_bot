@@ -81,8 +81,8 @@ async def parse_everyday_yandex_afisha():
 
     if list_of_links is not None:
         kill_xvfb()
-        description = run_parallel(get_event_description_yandex_afisha, list_of_links)
-        # description = get_event_description_yandex_afisha(list_of_links)
+        # description = run_parallel(get_event_description_yandex_afisha, list_of_links)
+        description = get_event_description_yandex_afisha(0, list_of_links)
         await add_descriptions(description)
 
     await asyncio.to_thread(clean_up)

@@ -155,8 +155,6 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
     all_count = len(list_of_links)
     current_count = 1
 
-    process_id = 0
-
     start_xvfb(process_id)
 
     driver = init_driver()
