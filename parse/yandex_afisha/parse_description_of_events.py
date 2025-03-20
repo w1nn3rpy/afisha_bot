@@ -24,7 +24,7 @@ def start_xvfb(process_id):
     # 1️⃣ Останавливаем ВСЕ Xvfb-процессы
     subprocess.run(["pkill", "Xvfb"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
-    for display_num in range(99, 100 + process_id):  # Проверяем дисплеи от :99 до :103
+    for display_num in range(99, 104):  # Проверяем дисплеи от :99 до :103
         lock_file = f"/tmp/.X{display_num}-lock"
         if os.path.exists(lock_file):
             os.remove(lock_file)
