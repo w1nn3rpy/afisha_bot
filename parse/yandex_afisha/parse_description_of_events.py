@@ -2,6 +2,7 @@ import asyncio
 import os
 import random
 import shutil
+import subprocess
 import time
 import traceback
 import tempfile
@@ -17,6 +18,23 @@ from config import logger
 from database.events_db import delete_event_by_url
 from parse.common_funcs import log_memory_usage
 from parse.yandex_afisha.parse_events import scroll_down
+
+
+def start_xvfb(process_id):
+    # 1️⃣ Останавливаем ВСЕ Xvfb-процессы
+    subprocess.run(["pkill", "Xvfb"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+    for display_num in range(99, 100 + process_id):  # Проверяем дисплеи от :99 до :103
+        lock_file = f"/tmp/.X{display_num}-lock"
+        if os.path.exists(lock_file):
+            os.remove(lock_file)
+            logger.info(f"[Xvfb] Lock file {lock_file} removed")
+
+    # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
+    display_num = 99 + process_id # Разные Xvfb для каждого процесса
+    os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
+    os.environ["DISPLAY"] = f":{display_num}"
+    logger.info(f"✅ Xvfb запущен на :{display_num}")
 
 
 def init_driver(process_id):
@@ -137,10 +155,7 @@ def get_event_description_yandex_afisha(process_id, list_of_links: List[str]) ->
     all_count = len(list_of_links)
     current_count = 1
 
-    # 🖥 Запуск виртуального дисплея Xvfb (если вдруг не запущен)
-    display_num = 99 + process_id # Разные Xvfb для каждого процесса
-    os.system(f"Xvfb :{display_num} -screen 0 1920x1080x24 &")
-    os.environ["DISPLAY"] = f":{display_num}"
+    start_xvfb(process_id)
 
     driver = init_driver(process_id)
     logger.info("🚀 Запускаем браузер...")
