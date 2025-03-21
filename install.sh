@@ -27,6 +27,7 @@ if [[ "$RUN_DB" =~ ^[Yy]$ ]]; then
     read -s -p "Введите POSTGRES_PASSWORD: " POSTGRES_PASSWORD
     echo
     read -p "Введите POSTGRES_DB (рекомендуется 'afisha_db'): " POSTGRES_DB
+    read -p "Введите POSTGRES_HOST (ip-адрес сервера на котором запускается база данных: " POSTGRES_HOST
 
     # === Обновляем docker-compose.yml и .env с введёнными переменными ===
     echo "🔹 Обновляем docker-compose.yml..."
@@ -34,7 +35,7 @@ if [[ "$RUN_DB" =~ ^[Yy]$ ]]; then
     sed -i "s/POSTGRES_USER: .*/POSTGRES_USER: ${POSTGRES_USER}/" docker-compose.yml
     sed -i "s/POSTGRES_PASSWORD: .*/POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}/" docker-compose.yml
     sed -i "s/POSTGRES_DB: .*/POSTGRES_DB: ${POSTGRES_DB}/" docker-compose.yml
-    sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}|" .env
+    sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}|" .env
 
     # === Запуск контейнеров PostgreSQL ===
     echo "🔹 Запускаем docker-compose..."
