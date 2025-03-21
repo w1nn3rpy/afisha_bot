@@ -2,10 +2,6 @@ FROM python:3.10-slim
 
 WORKDIR /usr/src/app
 
-FROM python:3.10-slim
-
-WORKDIR /usr/src/app
-
 COPY requirements.txt ./
 
 RUN apt-get update && apt-get install -y \

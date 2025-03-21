@@ -9,7 +9,7 @@ import subprocess
 
 from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description, \
-    move_events_from_temp_to_release_table
+    move_events_from_temp_to_release_table, copy_events_from_release_to_temp_table
 from parse.ticketland.parse_events import get_all_events_ticketland
 from parse.afisharu.parse_events import get_all_events_afisharu
 from parse.afisharu.parse_description_of_events import get_event_description_afisharu
@@ -40,6 +40,7 @@ def run_parallel(func: Callable, urls: List[str], num_processes: int = 2) -> Dic
 
 
 async def parse_everyday_ticketland():
+    await copy_events_from_release_to_temp_table('ticketland')
     all_events_list_of_dicts = get_all_events_ticketland()
     if all_events_list_of_dicts is not None:
         await add_events(all_events_list_of_dicts)
@@ -56,6 +57,7 @@ async def parse_everyday_ticketland():
     await move_events_from_temp_to_release_table()
 
 async def parse_everyday_afisharu():
+    await copy_events_from_release_to_temp_table('afisharu')
     all_events_list_of_dicts = get_all_events_afisharu()
     if all_events_list_of_dicts is not None:
         await add_events(all_events_list_of_dicts)
@@ -72,20 +74,20 @@ async def parse_everyday_afisharu():
     await move_events_from_temp_to_release_table()
 
 async def parse_everyday_yandex_afisha():
-    # all_events_list_of_dicts = get_all_events_yandex_afisha()
-    # if all_events_list_of_dicts is not None:
-    #     await add_events(all_events_list_of_dicts)
+    await copy_events_from_release_to_temp_table('yandex_afisha')
+    all_events_list_of_dicts = get_all_events_yandex_afisha()
+    if all_events_list_of_dicts is not None:
+        await add_events(all_events_list_of_dicts)
 
-    # list_of_records = await get_events_without_description()
-    # list_of_links = [record['link'] for record in list_of_records]
-    #
-    # if list_of_links is not None:
-    #     kill_xvfb()
-    #     # description = run_parallel(get_event_description_yandex_afisha, list_of_links)
-    #     description = get_event_description_yandex_afisha(0, list_of_links)
-    #     await add_descriptions(description)
-    #
-    # await asyncio.to_thread(clean_up)
+    list_of_records = await get_events_without_description()
+    list_of_links = [record['link'] for record in list_of_records]
+
+    if list_of_links is not None:
+        kill_xvfb()
+        description = get_event_description_yandex_afisha(0, list_of_links)
+        await add_descriptions(description)
+
+    await asyncio.to_thread(clean_up)
 
     await move_events_from_temp_to_release_table()
 

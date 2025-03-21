@@ -3,14 +3,14 @@ services:
     image: postgres:latest
     container_name: postgres_bot_container
     environment:
-      POSTGRES_USER: postgres # Установить username
-      POSTGRES_PASSWORD: PulseWithMe1337 # Установить пароль
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: PulseWithMe1337
       POSTGRES_DB: bot_test_afisha_db
-      PGDATA: /var/lib/postgresql/data/pgdata
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data/pgdata
+      - pgdata:/var/lib/postgresql/data
     deploy:
       resources:
         limits:
@@ -28,7 +28,7 @@ services:
                -c wal_buffers=16MB
                -c default_statistics_target=100
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres_user -d postgres_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d bot_test_afisha_db" ]
       interval: 30s
       timeout: 10s
       retries: 5

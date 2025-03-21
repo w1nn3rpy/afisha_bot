@@ -23,18 +23,21 @@ async def notify_user_scheduler():
                 logger.error(f'Ошибка при попытке оповещения пользователя: {e}')
                 continue
 
+async def parse_afisharu_scheduler():
+    await bot.send_message(chat_id=5983514379, text='Начинаю парсить афишару')
+    await parse_everyday_afisharu()
+    await bot.send_message(chat_id=5983514379, text='Закончил парсить афишару')
 
-async def parse_events_scheduler():
-    # await bot.send_message(chat_id=5983514379, text='Начинаю парсить афишару')
-    # await parse_everyday_afisharu()
-    #
-    # await bot.send_message(chat_id=5983514379, text='Начинаю парсить тикетленд')
-    # await parse_everyday_ticketland()
+async def parse_ticketland_scheduler():
+    await bot.send_message(chat_id=5983514379, text='Начинаю парсить тикетленд')
+    await parse_everyday_ticketland()
+    await bot.send_message(chat_id=5983514379, text='Закончил парсить тикетленд')
 
+async def parse_yandex_afisha_scheduler():
     await bot.send_message(chat_id=5983514379, text='Начинаю парсить яндекс афишу')
     await parse_everyday_yandex_afisha()
+    await bot.send_message(chat_id=5983514379, text='Закончил парсить яндекс афишу')
 
-    await bot.send_message(chat_id=5983514379, text='Закончил парсить мероприятия')
 
 async def delete_past_events_scheduler():
     await delete_past_events()
@@ -43,5 +46,7 @@ def start_scheduler():
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_past_events_scheduler, CronTrigger(hour=9), misfire_grace_time=180)
     scheduler.add_job(notify_user_scheduler, CronTrigger(hour=10), misfire_grace_time=180)
-    scheduler.add_job(parse_events_scheduler, CronTrigger(day='*/3', hour=20), misfire_grace_time=180)
+    scheduler.add_job(parse_afisharu_scheduler, CronTrigger(day='*/3', hour=20), misfire_grace_time=180)
+    scheduler.add_job(parse_ticketland_scheduler, CronTrigger(day='*/4', hour=21), misfire_grace_time=180)
+    scheduler.add_job(parse_yandex_afisha_scheduler, CronTrigger(day='*/7', hour=22), misfire_grace_time=180)
     scheduler.start()

@@ -99,6 +99,47 @@ async def delete_event_by_url(url):
         if conn:
             await conn.close()
 
+async def copy_events_from_release_to_temp_table(point: str):
+    if point == 'yandex_afisha':
+        url = 'https://afisha.yandex.ru/tomsk'
+    elif point == 'afisharu':
+        url = 'https://www.afisha.ru'
+    elif point == 'ticketland':
+        url = 'https://tomsk.ticketland.ru'
+    else:
+        raise ValueError('Неизвестное значение для URL')
+
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        rows = await conn.fetch('''
+        SELECT * FROM events
+        WHERE link LIKE $1 || '%';''', url)
+
+        if not rows:
+            logger.info('В таблице events нет данных подходящих под запрос')
+            return
+
+        for row in rows:
+            try:
+                await conn.execute('''
+                INSERT INTO temp_events_table (title, category, date, location, description, link)
+                VALUES ($1, $2, $3, $4, $5, $6)''',
+                                   row['title'], row['category'], row['date'], row['location'], row['description'], row['link'])
+
+                logger.info(f"✅ Успешно перемещена запись: {row['title']} {row['date']}")
+
+            except Exception as row_error:
+                logger.error(f"⚠️ Ошибка при перемещении {row['title']} {row['date']}: {row_error}")
+                continue  # Пропускаем ошибочную строку
+
+    except Exception as e:
+        logger.error(f'❌ Общая ошибка в move_events_from_temp_to_release_table: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
+
 
 async def move_events_from_temp_to_release_table():
     """Перемещает события из временной таблицы в основную и всегда очищает temp_events_table."""

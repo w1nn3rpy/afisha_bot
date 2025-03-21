@@ -13,36 +13,53 @@ check_install() {
     fi
 }
 
-# === Запрашиваем переменные ===
-read -p "Введите POSTGRES_USER: " POSTGRES_USER
-read -s -p "Введите POSTGRES_PASSWORD: " POSTGRES_PASSWORD
-echo
-read -p "Введите POSTGRES_DB: " POSTGRES_DB
-
 # === Установка зависимостей ===
 check_install "make" "make"
 check_install "docker" "docker.io"
-check_install "docker-compose" "docker-compose"
 
-# === Обновляем docker-compose.yml с введёнными переменными ===
-echo "🔹 Обновляем docker-compose.yml..."
+# === Запрос на запуск БД ===
+read -p "Хотите запустить PostgreSQL? [Y/n]: " RUN_DB
+RUN_DB=${RUN_DB:-Y}  # Если ввод пустой, то по умолчанию Y
 
-sed -i "s/POSTGRES_USER: .*/POSTGRES_USER: ${POSTGRES_USER}/" docker-compose.yml
-sed -i "s/POSTGRES_PASSWORD: .*/POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}/" docker-compose.yml
-sed -i "s/POSTGRES_DB: .*/POSTGRES_DB: ${POSTGRES_DB}/" docker-compose.yml
+if [[ "$RUN_DB" =~ ^[Yy]$ ]]; then
+    # === Запрашиваем переменные PostgreSQL ===
+    read -p "Введите POSTGRES_USER: " POSTGRES_USER
+    read -s -p "Введите POSTGRES_PASSWORD: " POSTGRES_PASSWORD
+    echo
+    read -p "Введите POSTGRES_DB: " POSTGRES_DB
 
-# === Запуск контейнеров ===
-echo "🔹 Запускаем docker-compose..."
-docker-compose up -d
+    # === Обновляем docker-compose.yml с введёнными переменными ===
+    echo "🔹 Обновляем docker-compose.yml..."
 
-read -p "Введите токен бота Telegram: " BOT_TOKEN
+    sed -i "s/POSTGRES_USER: .*/POSTGRES_USER: ${POSTGRES_USER}/" docker-compose.yml
+    sed -i "s/POSTGRES_PASSWORD: .*/POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}/" docker-compose.yml
+    sed -i "s/POSTGRES_DB: .*/POSTGRES_DB: ${POSTGRES_DB}/" docker-compose.yml
 
-# === Добавляем новый адрес для подключения к БД и токен в .env ===
-sed -i "s/BOT_TOKEN: .*/BOT_TOKEN: ${BOT_TOKEN}" .env
-sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}|" .env
+    # === Запуск контейнеров PostgreSQL ===
+    echo "🔹 Запускаем docker-compose..."
+    docker compose up -d
+else
+    echo "⏩ Пропускаем запуск БД."
+fi
 
-# === Запуск Dockerfile ===
-echo "🔹 Собираем и запускаем Docker-контейнер..."
-make build
-make run
+# === Запрос на запуск бота ===
+read -p "Хотите запустить бота? [Y/n]: " RUN_BOT
+RUN_BOT=${RUN_BOT:-Y}
+
+if [[ "$RUN_BOT" =~ ^[Yy]$ ]]; then
+    # === Запрашиваем токен бота ===
+    read -p "Введите токен бота Telegram: " BOT_TOKEN
+
+    # === Добавляем новый адрес для подключения к БД и токен в .env ===
+    sed -i "s/BOT_TOKEN: .*/BOT_TOKEN: ${BOT_TOKEN}/" .env
+    sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}|" .env
+
+    # === Запуск Docker-контейнера бота ===
+    echo "🔹 Собираем и запускаем Docker-контейнер..."
+    make build
+    make run
+else
+    echo "⏩ Пропускаем запуск бота."
+fi
+
 echo "✅ Установка завершена!"
