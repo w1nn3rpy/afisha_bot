@@ -127,10 +127,10 @@ async def copy_events_from_release_to_temp_table(point: str):
                 VALUES ($1, $2, $3, $4, $5, $6)''',
                                    row['title'], row['category'], row['date'], row['location'], row['description'], row['link'])
 
-                logger.info(f"✅ Успешно перемещена запись: {row['title']} {row['date']}")
+                logger.info(f"✅ Успешно скопирована запись: {row['title']} {row['date']}")
 
             except Exception as row_error:
-                logger.error(f"⚠️ Ошибка при перемещении {row['title']} {row['date']}: {row_error}")
+                logger.error(f"⚠️ Ошибка при копировании {row['title']} {row['date']}: {row_error}")
                 continue  # Пропускаем ошибочную строку
 
     except Exception as e:
