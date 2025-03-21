@@ -23,17 +23,18 @@ RUN_DB=${RUN_DB:-Y}  # Если ввод пустой, то по умолчан�
 
 if [[ "$RUN_DB" =~ ^[Yy]$ ]]; then
     # === Запрашиваем переменные PostgreSQL ===
-    read -p "Введите POSTGRES_USER: " POSTGRES_USER
+    read -p "Введите POSTGRES_USER (рекомендуется 'postgres'): " POSTGRES_USER
     read -s -p "Введите POSTGRES_PASSWORD: " POSTGRES_PASSWORD
     echo
-    read -p "Введите POSTGRES_DB: " POSTGRES_DB
+    read -p "Введите POSTGRES_DB (рекомендуется 'afisha_db'): " POSTGRES_DB
 
-    # === Обновляем docker-compose.yml с введёнными переменными ===
+    # === Обновляем docker-compose.yml и .env с введёнными переменными ===
     echo "🔹 Обновляем docker-compose.yml..."
 
     sed -i "s/POSTGRES_USER: .*/POSTGRES_USER: ${POSTGRES_USER}/" docker-compose.yml
     sed -i "s/POSTGRES_PASSWORD: .*/POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}/" docker-compose.yml
     sed -i "s/POSTGRES_DB: .*/POSTGRES_DB: ${POSTGRES_DB}/" docker-compose.yml
+    sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}|" .env
 
     # === Запуск контейнеров PostgreSQL ===
     echo "🔹 Запускаем docker-compose..."
@@ -50,9 +51,8 @@ if [[ "$RUN_BOT" =~ ^[Yy]$ ]]; then
     # === Запрашиваем токен бота ===
     read -p "Введите токен бота Telegram: " BOT_TOKEN
 
-    # === Добавляем новый адрес для подключения к БД и токен в .env ===
+    # === Добавляем новый токен в .env ===
     sed -i "s/BOT_TOKEN: .*/BOT_TOKEN: ${BOT_TOKEN}/" .env
-    sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}|" .env
 
     # === Запуск Docker-контейнера бота ===
     echo "🔹 Собираем и запускаем Docker-контейнер..."
