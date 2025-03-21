@@ -37,7 +37,7 @@ if [[ "$RUN_DB" =~ ^[Yy]$ ]]; then
 
     # === Запуск контейнеров PostgreSQL ===
     echo "🔹 Запускаем docker-compose..."
-    docker compose up -d
+    docker-compose up -d
 else
     echo "⏩ Пропускаем запуск БД."
 fi
