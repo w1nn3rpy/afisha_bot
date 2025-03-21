@@ -52,7 +52,7 @@ if [[ "$RUN_BOT" =~ ^[Yy]$ ]]; then
     read -p "Введите токен бота Telegram: " BOT_TOKEN
 
     # === Добавляем новый токен в .env ===
-    sed -i "s/BOT_TOKEN: .*/BOT_TOKEN: ${BOT_TOKEN}/" .env
+    sed -i "s|BOT_TOKEN: .*|BOT_TOKEN: ${BOT_TOKEN}" .env
 
     # === Запуск Docker-контейнера бота ===
     echo "🔹 Собираем и запускаем Docker-контейнер..."
