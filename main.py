@@ -4,14 +4,13 @@ from config import dp, bot, logger
 from database.models import create_table_if_not_exist
 from handlers.admin_handlers import set_commands, admin_router
 from handlers.user_handlers import user_router
-from scheduler import start_scheduler, delete_past_events_scheduler, parse_yandex_afisha_scheduler
+from scheduler import start_scheduler, delete_past_events_scheduler
 
 
 async def main():
     await create_table_if_not_exist()
     start_scheduler()
     await delete_past_events_scheduler()
-    await parse_yandex_afisha_scheduler()
     dp.include_router(admin_router)
     dp.include_router(user_router)
     await bot.delete_webhook(drop_pending_updates=True)
