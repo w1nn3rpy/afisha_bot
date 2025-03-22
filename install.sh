@@ -18,8 +18,8 @@ check_install "make" "make"
 check_install "docker" "docker.io"
 
 # === Запрос на запуск БД ===
-read -p "Хотите запустить PostgreSQL? [Y/n]: " RUN_DB
-RUN_DB=${RUN_DB:-Y}  # Если ввод пустой, то по умолчанию Y
+read -p "Хотите запустить PostgreSQL? [Y/n] (Запускать нужно только при первом запуске приложения на новом сервере): " RUN_DB
+RUN_DB=${RUN_DB:-n}  # Если ввод пустой, то по умолчанию n
 
 if [[ "$RUN_DB" =~ ^[Yy]$ ]]; then
     # === Запрашиваем переменные PostgreSQL ===
@@ -46,7 +46,7 @@ fi
 
 # === Запрос на запуск бота ===
 read -p "Хотите запустить бота? [Y/n]: " RUN_BOT
-RUN_BOT=${RUN_BOT:-Y}
+RUN_BOT=${RUN_BOT:-n}
 
 if [[ "$RUN_BOT" =~ ^[Yy]$ ]]; then
     # === Запрашиваем токен бота ===
