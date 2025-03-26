@@ -4,7 +4,6 @@ import time
 import shutil
 from typing import List
 
-from pip._internal.utils import urls
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -13,6 +12,53 @@ from config import logger
 from parse.common_funcs import normalize_category_gorodzovet
 
 BASE_URL = 'https://gorodzovet.ru'
+
+str_categories = {
+    # Выставка
+    'выставка': 'Выставка',
+    'экспозиция': 'Выставка',
+    'арт': 'Выставка',
+    'галерея': 'Выставка',
+    'инсталляция': 'Выставка',
+
+    # Театр
+    'спектакль': 'Театр',
+    'сценка': 'Театр',
+    'пьеса': 'Театр',
+    'драма': 'Театр',
+    'комедия': 'Театр',
+    'трагедия': 'Театр',
+    'моноспектакль': 'Театр',
+    'театральный': 'Театр',
+
+    # Для детей
+    'детский': 'Для детей',
+    'для детей': 'Для детей',
+    'малыш': 'Для детей',
+    'ребёнок': 'Для детей',
+    'анимация': 'Для детей',
+    'мультфильм': 'Для детей',
+    'детям': 'Для детей',
+    'семейный': 'Для детей',
+
+    # Экскурсия
+    'экскурсия': 'Экскурсия',
+    'тур': 'Экскурсия',
+    'прогулка': 'Экскурсия',
+    'обзорная': 'Экскурсия',
+    'поход': 'Экскурсия',
+    'маршрут': 'Экскурсия',
+
+    # Мастер-класс
+    'мастер-класс': 'Мастер-класс',
+    'мастеркласс': 'Мастер-класс',
+    'обучение': 'Мастер-класс',
+    'курс': 'Мастер-класс',
+    'тренинг': 'Мастер-класс',
+    'воркшоп': 'Мастер-класс',
+    'занятие': 'Мастер-класс'
+}
+
 
 def get_links() -> List[str]:
     today = datetime.date.today()
@@ -77,6 +123,7 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                 for event in event_blocks:
                     title_tag = event.find("h3", class_="lines lines2")
                     category_tags = event.find("div", class_="event-tags")
+                    logger.info(f'Category tags: {category_tags}')
                     date_venue_tag = event.find("span", class_="event-day innlink")
                     href_tag = event.find("div", class_="innlink event-link save-click")
 
@@ -88,7 +135,10 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     logger.info(f'Title: {title}')
                     event_link = f"https://www.gorodzovet.ru{href_tag['data-link']}"
                     logger.info(f'Event link: {event_link}')
-                    category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Неизвестно"
+                    if title in str_categories:
+                        category = str_categories[title]
+                    else:
+                        category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Неизвестно"
                     logger.info(f'Category: {category}')
                     date = date_venue_tag['data-link'].split("day")[-1].strip("/")
                     logger.info(f'Date: {date}')
