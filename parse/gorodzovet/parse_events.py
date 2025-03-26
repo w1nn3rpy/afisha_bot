@@ -59,9 +59,8 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
             logger.info("🚀 Запускаем браузер...")
 
             events = []
-            page = 1
             for url in urls:
-                logger.info(f"Найдено мероприятий: {len(events)}\n🔍 Парсим страницу {page}...")
+                logger.info(f"Найдено мероприятий: {len(events)}\n🔍 Парсим страницу {url}...")
 
                 driver.get(url)
                 time.sleep(2)  # Ожидание загрузки страницы
@@ -84,9 +83,13 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                         continue  # Если нет данных, пропускаем
 
                     title = title_tag.text.strip()
+                    logger.info(f'Title: {title}')
                     event_link = f"https://www.gorodzovet.ru{href_tag['href']}"
+                    logger.info(f'Event link: {event_link}')
                     category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Неизвестно"
+                    logger.info(f'Category: {category}')
                     date = date_venue_tag['data-link']
+                    logger.info(f'Date: {date}')
 
                     event_data = {
                         "title": title,
@@ -104,7 +107,6 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                         page_events.append(event_data)
 
                 events.extend(page_events)
-                page += 1
                 time.sleep(2)  # Пауза перед переходом на следующую страницу
 
             driver.quit()

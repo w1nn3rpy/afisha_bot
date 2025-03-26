@@ -95,17 +95,18 @@ async def parse_everyday_yandex_afisha():
 async def parse_everyday_gorodzovet():
     await copy_events_from_release_to_temp_table('gorodzovet')
     urls = get_links()
+    print(urls)
     all_events_list_of_dicts = get_all_events_gorodzovet(urls)
     if all_events_list_of_dicts is not None:
         await add_events(all_events_list_of_dicts)
 
-    list_of_records = await get_events_without_description()
-    list_of_links = [record['link'] for record in list_of_records]
-
-    if list_of_links is not None:
-        kill_xvfb()
-        description = run_parallel(get_event_description_gorodzovet, list_of_links)
-        await add_descriptions(description)
+    # list_of_records = await get_events_without_description()
+    # list_of_links = [record['link'] for record in list_of_records]
+    #
+    # if list_of_links is not None:
+    #     kill_xvfb()
+    #     description = run_parallel(get_event_description_gorodzovet, list_of_links)
+    #     await add_descriptions(description)
 
     await asyncio.to_thread(clean_up)
 
