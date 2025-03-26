@@ -54,6 +54,6 @@ def start_scheduler():
     scheduler.add_job(notify_user_scheduler, CronTrigger(hour=10), misfire_grace_time=180)
     scheduler.add_job(parse_afisharu_scheduler, CronTrigger(day='*/3', hour=20), misfire_grace_time=180)
     scheduler.add_job(parse_ticketland_scheduler, CronTrigger(day='*/4', hour=21), misfire_grace_time=180)
-    scheduler.add_job(parse_gorodzovet_scheduler, CronTrigger(day='*/5', hour=24), misfire_grace_time=180)
+    scheduler.add_job(parse_gorodzovet_scheduler, CronTrigger(day='*/5', hour=0), misfire_grace_time=180)
     scheduler.add_job(parse_yandex_afisha_scheduler, CronTrigger(day='*/7', hour=22), misfire_grace_time=180)
     scheduler.start()
