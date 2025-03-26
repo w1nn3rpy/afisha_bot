@@ -101,11 +101,13 @@ async def delete_event_by_url(url):
 
 async def copy_events_from_release_to_temp_table(point: str):
     if point == 'yandex_afisha':
-        url = 'https://afisha.yandex.ru/tomsk'
+        url = 'https://afisha.yandex.ru'
     elif point == 'afisharu':
         url = 'https://www.afisha.ru'
     elif point == 'ticketland':
         url = 'https://tomsk.ticketland.ru'
+    elif point == 'gorodzovet':
+        url = 'https://gorodzovet.ru'
     else:
         raise ValueError('Неизвестное значение для URL')
 

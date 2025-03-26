@@ -10,6 +10,7 @@ import subprocess
 from config import logger
 from database.events_db import add_events, add_descriptions, get_events_without_description, \
     move_events_from_temp_to_release_table, copy_events_from_release_to_temp_table
+from parse.gorodzovet.parse_events import get_all_events_gorodzovet, get_links
 from parse.ticketland.parse_events import get_all_events_ticketland
 from parse.afisharu.parse_events import get_all_events_afisharu
 from parse.afisharu.parse_description_of_events import get_event_description_afisharu
@@ -85,6 +86,25 @@ async def parse_everyday_yandex_afisha():
     if list_of_links is not None:
         kill_xvfb()
         description = get_event_description_yandex_afisha(0, list_of_links)
+        await add_descriptions(description)
+
+    await asyncio.to_thread(clean_up)
+
+    await move_events_from_temp_to_release_table()
+
+async def parse_everyday_gorodzovet():
+    await copy_events_from_release_to_temp_table('gorodzovet')
+    urls = get_links()
+    all_events_list_of_dicts = get_all_events_gorodzovet(urls)
+    if all_events_list_of_dicts is not None:
+        await add_events(all_events_list_of_dicts)
+
+    list_of_records = await get_events_without_description()
+    list_of_links = [record['link'] for record in list_of_records]
+
+    if list_of_links is not None:
+        kill_xvfb()
+        description = run_parallel(get_event_description_gorodzovet, list_of_links)
         await add_descriptions(description)
 
     await asyncio.to_thread(clean_up)

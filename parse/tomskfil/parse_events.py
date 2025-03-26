@@ -1,2 +1,0 @@
-# https://tomskfil.ru/afisha/
-

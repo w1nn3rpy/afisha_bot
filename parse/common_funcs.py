@@ -1,5 +1,6 @@
 import psutil
-
+from datetime import datetime, date
+import re
 from config import logger
 
 CATEGORY_MAPPING = {
@@ -15,6 +16,7 @@ CATEGORY_MAPPING = {
     "фолк": "Концерт",
     "этно": "Концерт",
     "эстрада": "Концерт",
+    "музыка": "Концерт",
 
     "спектакли": "Театр",
     "драматический": "Театр",
@@ -28,8 +30,10 @@ CATEGORY_MAPPING = {
     "детям": "Для детей",
     "детский": "Для детей",
     "интерактивная": "Для детей",
+    "для детей": "Для детей",
 
     "мастер-классы": "Мастер-класс",
+    "мастер-класс": "Мастер-класс",
 
     "наука": "Наука",
 
@@ -53,9 +57,6 @@ def normalize_category(raw_categories: str) -> str:
             normalized.add("Другое")  # Если не найдено в списке, отправляем в "Другое"
 
     return ", ".join(sorted(normalized))  # Объединяем обратно
-
-from datetime import datetime, date
-import re
 
 def clean_date(date_text):
     """Приводит дату к формату date (YYYY-MM-DD)"""
@@ -151,3 +152,17 @@ def find_nearest_date(date_str: str) -> date | None:
 def log_memory_usage():
     mem = psutil.virtual_memory()
     logger.info(f"📊 Память перед запуском Chrome: {mem.available / (1024 * 1024)} MB свободно")
+
+def normalize_category_gorodzovet(raw_categories: str) -> str:
+    """Приводит категории к единому формату согласно фильтрам"""
+    categories = raw_categories.lower().split(", ")  # Разбиваем строку
+    normalized = set()
+
+    for category in categories:
+        category = category.strip()
+        if category in CATEGORY_MAPPING:
+            normalized.add(CATEGORY_MAPPING[category])
+        else:
+            normalized.add("Другое")  # Если не найдено в списке, отправляем в "Другое"
+
+    return ", ".join(sorted(normalized))  # Объединяем обратно
