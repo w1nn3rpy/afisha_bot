@@ -139,7 +139,7 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                         for word in title.split():
                             print(word)
                             if word.lower() in str_categories:
-                                category = str_categories[title]
+                                category = str_categories.get(word.lower())
                                 break
                             else:
                                 category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Другое"
