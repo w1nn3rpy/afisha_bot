@@ -73,7 +73,8 @@ def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Di
                                 logger.info(f"[{process_id}] [INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
 
                     except Exception as e:
-                        logger.warning(f"[{process_id}] ⚠️ Ошибка при парсинге описания: {e}")
+                        logger.error(f"[{process_id}] ⚠️ Ошибка при парсинге описания: {e}")
+                        raise
 
                     try:
                         venue_div = soup.find("div", class_="seance-venue-name")
@@ -84,7 +85,8 @@ def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Di
                             asyncio.run(add_venue(venue, url))
                             break
                     except Exception as e:
-                        logger.warning(f"[{process_id}] ⚠️ Ошибка при парсинге venue: {e}")
+                        logger.error(f"[{process_id}] ⚠️ Ошибка при парсинге venue: {e}")
+                        raise
 
                 except Exception as e:
                     attempts += 1
