@@ -75,11 +75,14 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
 
                 for event in event_blocks:
                     title_tag = event.find("h3", class_="lines lines2")
+                    logger.info(f'Title: {title_tag.text}')
                     category_tags = event.find("div", class_="event-tags")
                     date_venue_tag = event.find("a", class_="event-day innlink")
+                    logger.info(f'Date: {date_venue_tag.text}')
                     href_tag = event.find("div", class_="innlink event-link save-click")
 
                     if not title_tag or not date_venue_tag:
+                        logger.error('SKIP')
                         continue  # Если нет данных, пропускаем
 
                     title = title_tag.text.strip()
