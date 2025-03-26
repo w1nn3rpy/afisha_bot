@@ -31,10 +31,6 @@ def extract_description(soup: BeautifulSoup) -> str:
 
     return desc_block.get_text(strip=True)
 
-def extract_venue(soup: BeautifulSoup) -> str:
-
-
-
 def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
     """Получает описание мероприятия по ссылке."""
 
