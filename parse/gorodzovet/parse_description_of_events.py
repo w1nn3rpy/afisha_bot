@@ -81,7 +81,7 @@ def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Di
                         if venue_div:
                             venue = venue_div.get_text(strip=True)
                             logger.info(f"[{process_id}] [INFO] ✅ Место: {venue}")
-                            asyncio.to_thread(add_venue, venue, url)
+                            asyncio.run(add_venue(venue, url))
                             break
                     except Exception as e:
                         logger.warning(f"[{process_id}] ⚠️ Ошибка при парсинге venue: {e}")
