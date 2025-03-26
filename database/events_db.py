@@ -293,7 +293,7 @@ async def add_venue(venue, url):
         query = '''
         UPDATE temp_events_table
         SET location = $2
-        WHERE url = $1
+        WHERE link = $1
         '''
 
         try:
