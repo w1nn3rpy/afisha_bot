@@ -8,7 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from config import logger
-from database.events_db import delete_event_by_url
+from database.events_db import delete_event_by_url, add_venue
 from parse.afisharu.parse_events import init_driver
 from parse.common_funcs import log_memory_usage
 
@@ -30,6 +30,9 @@ def extract_description(soup: BeautifulSoup) -> str:
         return first_part
 
     return desc_block.get_text(strip=True)
+
+def extract_venue(soup: BeautifulSoup) -> str:
+
 
 
 def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
@@ -59,20 +62,31 @@ def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Di
                 try:
                     # Ждём появления блока описания
                     soup = BeautifulSoup(body.get_attribute("innerHTML"), "html.parser")
+                    try:
+                        # Пробуем найти основной текст внутри RESTRICT-TEXT
+                        get_description = extract_description(soup)
 
-                    # Пробуем найти основной текст внутри RESTRICT-TEXT
-                    get_description = extract_description(soup)
+                        if get_description:
+                            new_description = get_description
+                            logger.info(f"[{process_id}] [INFO] ✅ Описание: {new_description}")
 
-                    if get_description:
-                        new_description = get_description
-                        logger.info(f"[{process_id}] [INFO] ✅ Описание: {new_description}")
+                            if len(new_description) > 5:
+                                descriptions[url] = new_description
+                                break
+                            else:
+                                logger.info(f"[{process_id}] [INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                                break
+                    except Exception as e:
+                        logger.warning(f"[{process_id}] ⚠️ Ошибка при парсинге описания: {e}")
 
-                        if len(new_description) > 5:
-                            descriptions[url] = new_description
-                        else:
-                            logger.info(f"[{process_id}] [INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
+                    try:
+                        venue_div = soup.find("div", class_="seance-venue-name")
 
-                    break
+                        if venue_div:
+                            venue = venue_div.get_text(strip=True)
+                            asyncio.to_thread(add_venue, venue, url)
+                    except Exception as e:
+                        logger.warning(f"[{process_id}] ⚠️ Ошибка при парсинге venue: {e}")
 
                 except Exception as e:
                     attempts += 1
@@ -88,6 +102,7 @@ def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Di
                     driver = init_driver()
                     logger.info(f'[{process_id}] [INFO] ℹ️  Браузер перезапущен')
                     time.sleep(5)
+
 
             time.sleep(random.uniform(0.5, 2))  # Задержка для избежания бана
             current_count += 1

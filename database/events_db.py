@@ -285,3 +285,26 @@ async def delete_past_events():
     finally:
         if conn:
             await conn.close()
+
+async def add_venue(venue, url):
+    conn = None
+    try:
+        conn = await asyncpg.connect(DB_URL)
+        query = '''
+        UPDATE temp_events_table
+        SET location = $2
+        WHERE url = $1
+        '''
+
+        try:
+            await conn.execute(query, url, venue)
+
+        except Exception as e:
+            logger.error(f'Произошла ошибка в {__name__} при добавлении места: {venue}\nОшибка: {e}')
+
+    except Exception as e:
+        logger.error(f'Произошла ошибка в {__name__}: {e}')
+
+    finally:
+        if conn:
+            await conn.close()
