@@ -68,10 +68,10 @@ def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Di
 
                             if len(new_description) > 5:
                                 descriptions[url] = new_description
-                                break
+
                             else:
                                 logger.info(f"[{process_id}] [INFO] ℹ️  Обнаруженное описание менее 5 символов. Установлено 'Нет описания'")
-                                break
+
                     except Exception as e:
                         logger.warning(f"[{process_id}] ⚠️ Ошибка при парсинге описания: {e}")
 
