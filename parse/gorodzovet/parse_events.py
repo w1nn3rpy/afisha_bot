@@ -134,6 +134,7 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     logger.info(f'Title: {title}')
                     event_link = f"https://www.gorodzovet.ru{href_tag['data-link']}"
                     logger.info(f'Event link: {event_link}')
+                    category = ''
                     try:
                         for word in title.split():
                             print(word)
