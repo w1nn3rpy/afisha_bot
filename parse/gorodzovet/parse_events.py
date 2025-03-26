@@ -134,13 +134,17 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     logger.info(f'Title: {title}')
                     event_link = f"https://www.gorodzovet.ru{href_tag['data-link']}"
                     logger.info(f'Event link: {event_link}')
-                    for word in title.split():
-                        print(word)
-                        if word.lower() in str_categories:
-                            category = str_categories[title]
-                            break
-                        else:
-                            category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Другое"
+                    try:
+                        for word in title.split():
+                            print(word)
+                            if word.lower() in str_categories:
+                                category = str_categories[title]
+                                break
+                            else:
+                                category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Другое"
+                    except Exception as e:
+                        logger.error(f'ОШИБКА: {e}')
+
                     logger.info(f'Category: {category}')
                     date = date_venue_tag['data-link'].split("day")[-1].strip("/")
                     logger.info(f'Date: {date}')
