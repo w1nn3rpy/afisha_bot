@@ -123,7 +123,6 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                 for event in event_blocks:
                     title_tag = event.find("h3", class_="lines lines2")
                     category_tags = event.find("div", class_="event-tags")
-                    logger.info(f'Category tags: {category_tags}')
                     date_venue_tag = event.find("span", class_="event-day innlink")
                     href_tag = event.find("div", class_="innlink event-link save-click")
 
@@ -135,10 +134,12 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     logger.info(f'Title: {title}')
                     event_link = f"https://www.gorodzovet.ru{href_tag['data-link']}"
                     logger.info(f'Event link: {event_link}')
-                    if title.lower() in str_categories:
-                        category = str_categories[title]
-                    else:
-                        category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Неизвестно"
+                    for word in title:
+                        if word.lower() in str_categories:
+                            category = str_categories[title]
+                            break
+                        else:
+                            category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Другое"
                     logger.info(f'Category: {category}')
                     date = date_venue_tag['data-link'].split("day")[-1].strip("/")
                     logger.info(f'Date: {date}')
