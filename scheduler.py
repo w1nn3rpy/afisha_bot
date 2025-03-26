@@ -5,7 +5,8 @@ from database.user_db import get_users_for_notifications, update_last_notify
 from database.events_db import delete_past_events
 from config import bot, logger
 from keyboards.user_kbs import go_menu_button
-from parse.parse_everyday import parse_everyday_afisharu, parse_everyday_ticketland, parse_everyday_yandex_afisha
+from parse.parse_everyday import parse_everyday_afisharu, parse_everyday_ticketland, parse_everyday_yandex_afisha, \
+    parse_everyday_gorodzovet
 
 
 async def notify_user_scheduler():
@@ -38,6 +39,11 @@ async def parse_yandex_afisha_scheduler():
     await parse_everyday_yandex_afisha()
     await bot.send_message(chat_id=5983514379, text='Закончил парсить яндекс афишу')
 
+async def parse_gorodzovet_scheduler():
+    await bot.send_message(chat_id=5983514379, text='Начинаю парсить городзовет')
+    await parse_everyday_gorodzovet()
+    await bot.send_message(chat_id=5983514379, text='Закончил парсить городзовет')
+
 
 async def delete_past_events_scheduler():
     await delete_past_events()
@@ -48,5 +54,6 @@ def start_scheduler():
     scheduler.add_job(notify_user_scheduler, CronTrigger(hour=10), misfire_grace_time=180)
     scheduler.add_job(parse_afisharu_scheduler, CronTrigger(day='*/3', hour=20), misfire_grace_time=180)
     scheduler.add_job(parse_ticketland_scheduler, CronTrigger(day='*/4', hour=21), misfire_grace_time=180)
+    scheduler.add_job(parse_gorodzovet_scheduler, CronTrigger(day='*/5', hour=24), misfire_grace_time=180)
     scheduler.add_job(parse_yandex_afisha_scheduler, CronTrigger(day='*/7', hour=22), misfire_grace_time=180)
     scheduler.start()
