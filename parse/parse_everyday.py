@@ -110,7 +110,7 @@ async def parse_everyday_gorodzovet():
 
     await asyncio.to_thread(clean_up)
 
-    await move_events_from_temp_to_release_table()
+    # await move_events_from_temp_to_release_table()
 
 def clean_up():
     logger.info("🔄 Очистка памяти и завершение процессов...")
