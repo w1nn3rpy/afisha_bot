@@ -143,7 +143,7 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     except Exception as e:
                         logger.error(f'ОШИБКА: {e}')
 
-                    date = datetime.datetime.strptime(date_venue_tag['data-link'].split("day")[-1].strip("/"), "%Y/%m/%d").date()
+                    date = datetime.datetime.strptime(date_venue_tag['data-link'].split("day")[-1].strip("/"), "%Y-%m-%d").date()
 
                     event_data = {
                         "title": title,
