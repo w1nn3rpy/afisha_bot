@@ -79,7 +79,7 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     logger.info(f'Title: {title_tag.text}')
                     category_tags = event.find("div", class_="event-tags")
                     date_venue_tag = event.find("span", class_="event-day innlink")
-                    logger.info(f'Date: {date_venue_tag['data-link']}')
+                    logger.info(f"Date: {date_venue_tag['data-link']}")
                     href_tag = event.find("div", class_="innlink event-link save-click")
                     logger.info(f'Href: https://www.gorodzovet.ru{href_tag["data-link"]}')
 
