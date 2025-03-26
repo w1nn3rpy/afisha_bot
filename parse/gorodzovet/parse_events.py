@@ -103,7 +103,7 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     logger.info(f'Событие: {title}\n'
                                 f'Дата: {date}\n'
                                 f'Категория: {category}\n'
-                                f'Ссылка: {href_tag["href"]}\n')
+                                f'Ссылка: {href_tag["data-link"]}\n')
 
                     if date and title and category and event_link:
                         page_events.append(event_data)
