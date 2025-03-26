@@ -76,12 +76,9 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
 
                 for event in event_blocks:
                     title_tag = event.find("h3", class_="lines lines2")
-                    logger.info(f'Title: {title_tag.text}')
                     category_tags = event.find("div", class_="event-tags")
                     date_venue_tag = event.find("span", class_="event-day innlink")
-                    logger.info(f"Date: {date_venue_tag['data-link']}")
                     href_tag = event.find("div", class_="innlink event-link save-click")
-                    logger.info(f'Href: https://www.gorodzovet.ru{href_tag["data-link"]}')
 
                     if not title_tag or not date_venue_tag:
                         logger.error('SKIP')
@@ -89,11 +86,11 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
 
                     title = title_tag.text.strip()
                     logger.info(f'Title: {title}')
-                    event_link = f"https://www.gorodzovet.ru{href_tag['href']}"
+                    event_link = f"https://www.gorodzovet.ru{href_tag['data-link']}"
                     logger.info(f'Event link: {event_link}')
                     category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Неизвестно"
                     logger.info(f'Category: {category}')
-                    date = date_venue_tag['data-link']
+                    date = date_venue_tag['data-link'].split("day")[-1].strip("/")
                     logger.info(f'Date: {date}')
 
                     event_data = {
