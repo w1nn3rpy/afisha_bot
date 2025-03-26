@@ -12,8 +12,27 @@ from database.events_db import delete_event_by_url
 from parse.afisharu.parse_events import init_driver
 from parse.common_funcs import log_memory_usage
 
+def extract_description(soup: BeautifulSoup) -> str:
+    desc_block = soup.select_one("div.eventText div.container--padding")
+    if not desc_block:
+        return "Описание не найдено"
 
-def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
+    # Попробуем найти первый <p>
+    first_p = desc_block.find("p")
+    if first_p:
+        return first_p.get_text(strip=True)
+
+    # Если <p> нет — берём всё содержимое до первого <br>
+    raw_html = str(desc_block)
+    parts = raw_html.split("<br")
+    if parts:
+        first_part = BeautifulSoup(parts[0], "html.parser").get_text(strip=True)
+        return first_part
+
+    return desc_block.get_text(strip=True)
+
+
+def get_event_description_gorodzovet(process_id, list_of_links: List[str]) -> Dict[str, str] | None:
     """Получает описание мероприятия по ссылке."""
 
     descriptions = {url: 'Нет описания' for url in list_of_links}
@@ -34,30 +53,18 @@ def get_event_description_afisharu(process_id, list_of_links: List[str]) -> Dict
 
                 logger.info(f"[{process_id}] [INFO] ℹ️  {current_count}/{all_count} Открываем страницу: {url}")
                 driver.get(url)
-                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                body = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
                 logger.info(f"[{process_id}] [INFO] ℹ️  Страница загружена!")
 
                 try:
-                    error_element = driver.find_element(By.CSS_SELECTOR, "h1.error-page__title")
-                    if "Данная страница не найдена!" in error_element.text:
-                        logger.warning(f"[{process_id}] ⚠️ Страница 404! Удаляем {url}")
-                        asyncio.run(delete_event_by_url(url))
-                        break
-                except:
-                    pass  # Ошибки нет, продолжаем
-
-                try:
                     # Ждём появления блока описания
-                    description_block = WebDriverWait(driver, 20).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-test='OBJECT-DESCRIPTION-CONTENT']"))
-                    )
-                    soup = BeautifulSoup(description_block.get_attribute("innerHTML"), "html.parser")
+                    soup = BeautifulSoup(body.get_attribute("innerHTML"), "html.parser")
 
                     # Пробуем найти основной текст внутри RESTRICT-TEXT
-                    first_paragraph = soup.find("div", {"data-test": "RESTRICT-TEXT"})
+                    get_description = extract_description(soup)
 
-                    if first_paragraph:
-                        new_description = first_paragraph.text.strip()
+                    if get_description:
+                        new_description = get_description
                         logger.info(f"[{process_id}] [INFO] ✅ Описание: {new_description}")
 
                         if len(new_description) > 5:
