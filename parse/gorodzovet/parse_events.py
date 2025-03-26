@@ -135,7 +135,7 @@ def get_all_events_gorodzovet(urls: List[str]) -> List[dict] | None:
                     logger.info(f'Title: {title}')
                     event_link = f"https://www.gorodzovet.ru{href_tag['data-link']}"
                     logger.info(f'Event link: {event_link}')
-                    if title in str_categories:
+                    if title.lower() in str_categories:
                         category = str_categories[title]
                     else:
                         category = normalize_category_gorodzovet(category_tags.text.strip()) if category_tags else "Неизвестно"
